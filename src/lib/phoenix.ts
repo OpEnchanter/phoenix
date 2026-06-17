@@ -274,8 +274,8 @@ export class Scene {
 
 type ApplicationArguments = {
     targetFramerate?: number,
-    downscaleFactor?: number,
-    canvasSelector?: string
+    zoom?: number,
+    renderScale?: Vector2
 }
 
 type DrawRequest = {
@@ -314,12 +314,12 @@ export class App {
 
     renderTarget: THREE.WebGLRenderTarget;
 
-    renderScale: Vector2 = new Vector2(360, 180)
+    renderScale: Vector2 = new Vector2(2560, 1440)
 
     constructor (args: ApplicationArguments = {
         targetFramerate: 60,
-        downscaleFactor: 1,
-        canvasSelector: "canvas"
+        zoom: 1,
+        renderScale: new Vector2(1920, 1080)
     }) {
         this.args = args
 
@@ -328,7 +328,7 @@ export class App {
 
 
         // Rendering
-        const LOW_W = this.renderScale.x; const LOW_H = this.renderScale.y
+        const LOW_W = this.args.renderScale!.x; const LOW_H = this.args.renderScale!.y
         this.renderTarget = new THREE.WebGLRenderTarget(LOW_W, LOW_H, {
             magFilter: THREE.NearestFilter,
             minFilter: THREE.NearestFilter
@@ -375,11 +375,11 @@ export class App {
         const h = this.renderScale.y * yScaleFactor;
         this.renderer.setSize(w, h);
 
-        this.camera.left = -w / 8;
-        this.camera.right = w / 8;
+        this.camera.left = -w / 2 * this.args.zoom!;
+        this.camera.right = w / 2 * this.args.zoom!;
 
-        this.camera.top = h / 8;
-        this.camera.bottom = -h / 8;
+        this.camera.top = h / 2 * this.args.zoom!;
+        this.camera.bottom = -h / 2 * this.args.zoom!;
         this.camera.updateProjectionMatrix();
     }
 
