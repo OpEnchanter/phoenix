@@ -1,22 +1,20 @@
-import * as Phoenix from "./lib/phoenix.ts"
+import * as Phoenix from "./lib/phoenix.ts";
+import * as Example from "./ExampleScene.ts";
+import * as Example2 from "./ExampleScene2.ts";
 
-const app: Phoenix.App = new Phoenix.App();
+const app: Phoenix.App = new Phoenix.App({
+    targetFramerate: 60,
+    downscaleFactor: 4,
+    canvasSelector: "canvas"
+});
 
-for (let i = 0; i < 50; i++) {
-    app.addObject(app.createObject(
-        new Phoenix.Transform(new Phoenix.Vector2(100+i,10), Math.abs(Math.random())*90, new Phoenix.Vector2(25, 25)),
-        new Phoenix.Sprite("/assets/brick.png"),
-        new Phoenix.Renderer(0),
-        new Phoenix.BoxCollider(new Phoenix.Vector2(25, 25)),
-        new Phoenix.Rigidbody(1, 1, false)
-    ))
-}
+app.addScene("example", new Example.Scene())
+app.addScene("example2", new Example2.Scene())
 
-app.addObject(app.createObject(
-    new Phoenix.Transform(new Phoenix.Vector2(0,500), 0, new Phoenix.Vector2(2000, 100)),
-    new Phoenix.Sprite("/assets/null.png"),
-    new Phoenix.Renderer(0),
-    new Phoenix.BoxCollider(new Phoenix.Vector2(2000, 100)),
-    new Phoenix.Rigidbody(1, 1, true)
-))
-app.start();
+app.loadScene("example")
+
+document.addEventListener("keydown", (e) => {
+    if (e.key.toLowerCase() == "h") {
+        app.loadScene((app.getScene() == "example") ? "example2" : "example");
+    }
+})

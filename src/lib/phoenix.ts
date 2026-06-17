@@ -150,6 +150,11 @@ export class Rigidbody extends Component {
         this.transform.position.y = this.body.getPosition().y * 32 - this.transform.scale.y / 2
         this.transform.rotation = this.body.getAngle() / (Math.PI / 180);
     }
+
+    public override onDestroyed(): void {
+        if (!this.parent || !this.body) return
+        this.parent.app.plWorld.destroyBody(this.body);
+    }
 }
 
 
@@ -227,10 +232,14 @@ export class GameObject {
 
 // Engine Functions
 
+export class Scene {
+    public onLoad(app: App): void {}
+}
+
 type ApplicationArguments = {
-    targetFramerate: number,
-    downscaleFactor: number,
-    canvasSelector: string
+    targetFramerate?: number,
+    downscaleFactor?: number,
+    canvasSelector?: string
 }
 
 type DrawRequest = {
@@ -254,6 +263,12 @@ export class App {
 
     plWorld: pl.World;
 
+    isTicking: boolean = false;
+
+    scenes: Record<string, Scene> = {};
+
+    curScene: string = "";
+
     constructor (args: ApplicationArguments = {
         targetFramerate: 60,
         downscaleFactor: 1,
@@ -264,7 +279,7 @@ export class App {
         this.plWorld = new pl.World({gravity: {x:0, y:10}});
 
         // Find <canvas> and get context
-        this.canvas = document.querySelector(this.args.canvasSelector) as HTMLCanvasElement;
+        this.canvas = document.querySelector(this.args.canvasSelector!) as HTMLCanvasElement;
         this.resizeCanvas();
         
         if (!this.canvas) {
@@ -282,8 +297,10 @@ export class App {
             return;
         }
 
+        this.isTicking = true;
+
         this.eventLoopIntervalID = setInterval(() => {
-            this.plWorld.step(1/this.args.targetFramerate, 10, 6);
+            this.plWorld.step(1/this.args.targetFramerate!, 10, 6);
             this.resizeCanvas();
 
             for (const o of this.objects) {
@@ -302,12 +319,13 @@ export class App {
             }
 
             for (const o of this.objectRemovalBuffer) {
+                o.onDestroyed();
                 this.objects.splice(this.objects.indexOf(o), 1);
             }
 
             this.objectAdditionBuffer.length = 0;
             this.objectRemovalBuffer.length = 0;
-        }, 1000/this.args.targetFramerate)
+        }, 1000/this.args.targetFramerate!)
     }
 
     public stop() {
@@ -315,15 +333,19 @@ export class App {
             Logger.error("Failed to stop, application not running")
             return;
         }
+
+        this.isTicking = false;
+        clearInterval(this.eventLoopIntervalID);
     }
 
     private resizeCanvas() {
-        this.canvas!.width = document.body.clientWidth / this.args.downscaleFactor;
-        this.canvas!.height = document.body.clientHeight / this.args.downscaleFactor;
+        this.canvas!.width = document.body.clientWidth / this.args.downscaleFactor!;
+        this.canvas!.height = document.body.clientHeight / this.args.downscaleFactor!;
     }
 
     public draw() {
-        this.ctx!.fillStyle = "blue";
+        this.ctx!.imageSmoothingEnabled = false;
+        this.ctx!.fillStyle = "#9aafef";
         this.ctx!.fillRect(0, 0, this.canvas!.width, this.canvas!.height)
         const sorted = this.drawBuffer.sort((a, b) => b.depth - a.depth);
         for (const call of sorted) {
@@ -352,7 +374,12 @@ export class App {
     }
 
     public removeObject(object: GameObject) {
-        this.objectRemovalBuffer.push(object);
+        if (this.isTicking) {
+            this.objectRemovalBuffer.push(object);
+        } else {
+            object.onDestroyed();
+            this.objects.splice(this.objects.indexOf(object), 1);
+        }
     }
 
     public createObject(...components: Component[]): GameObject {
@@ -363,5 +390,40 @@ export class App {
             obj.components.push(c);
         }
         return obj;
+    }
+
+    public addScene(name: string, scene: Scene) {
+        this.scenes[name] = scene;
+    }
+
+    public loadScene(name: string) {
+        if (!Object.keys(this.scenes).includes(name)) {
+            Logger.error(`Scene, ${name} not found`)
+            return
+        }
+
+        Logger.success(`Loading scene, ${name}`)
+
+        this.ctx!.fillStyle = "#9aafef";
+        this.ctx!.fillRect(0, 0, this.canvas!.width, this.canvas!.height)
+
+        this.curScene = name;
+
+        if (this.isTicking) {
+            this.stop();
+        }
+
+        for (const o of this.objects) {
+            o.onDestroyed();
+        }
+        this.objects.length = 0;
+
+        this.scenes[name]!.onLoad(this);
+
+        this.start();
+    }
+
+    public getScene() {
+        return this.curScene;
     }
 }
