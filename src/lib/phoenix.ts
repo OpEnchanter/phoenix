@@ -1,5 +1,7 @@
 import chalk from "chalk";
 import * as pl from "planck";
+import * as THREE from "three";
+import type { Vector } from "three/examples/jsm/Addons.js";
 
 // Generic Functions
 export class Vector2 {
@@ -78,19 +80,19 @@ export class Transform extends Component {
 }
 
 export class Sprite extends Component {
-    texture: HTMLImageElement;
+    src: string;
 
     constructor (src: string) {
         super()
-        const img = new window.Image();
-        img.src = src;
-        this.texture = img;
+        this.src = src;
     }
 }
 
 export class Renderer extends Component {
     transform: Transform | undefined = undefined;
     sprite: Sprite | undefined = undefined;
+
+    mesh: THREE.Mesh | undefined = undefined;
 
     depth: number;
 
@@ -99,18 +101,52 @@ export class Renderer extends Component {
         this.depth = depth;
     }
 
+    loadTexture(url: string): THREE.Texture {
+        return new THREE.TextureLoader().load(url, (tex) => {
+            tex.colorSpace = THREE.SRGBColorSpace;
+            tex.magFilter = THREE.NearestFilter;
+            tex.minFilter = THREE.NearestFilter;
+        })
+    }
+
     public override onInitialized(): void {
         if (!this.parent) return
         this.transform = this.parent.getComponent(Transform);
         this.sprite = this.parent.getComponent(Sprite);
+
+        if (!this.sprite) return
+
+        const texture = this.loadTexture(this.sprite.src);
+
+        this.mesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(this.transform?.scale.x, this.transform?.scale.y),
+            new THREE.MeshBasicMaterial({
+                map: texture,
+                transparent: true
+            })
+        )
+
+        this.parent.app.renderScene.add(this.mesh)
     }
 
-    public override onUpdate(): void {
-        this.parent?.app.drawBuffer.push({
-            src: this.sprite?.texture,
-            transform: this.transform?.asTransformation(),
-            depth: this.depth
-        } as DrawRequest);
+    public override onDestroyed(): void {
+        if (!this.parent || !this.mesh) return
+        this.parent.app.renderScene.remove(this.mesh);
+        this.mesh.geometry.dispose();
+        (this.mesh.material as THREE.Material).dispose();
+    }
+
+    public override onLateUpdate(): void {
+        if (!this.transform || !this.mesh || !this.parent) return
+        this.mesh.position.set(
+            this.transform.position.x, 
+            this.transform.position.y, 0
+        )
+
+        this.mesh.rotation.set(
+            0, 0,
+            this.transform.rotation * (Math.PI / 180)
+        )
     }
 }
 
@@ -146,8 +182,8 @@ export class Rigidbody extends Component {
 
     public override onUpdate(): void {
         if (!this.transform || !this.body) return
-        this.transform.position.x = this.body.getPosition().x * 32 - this.transform.scale.x / 2
-        this.transform.position.y = this.body.getPosition().y * 32 - this.transform.scale.y / 2
+        this.transform.position.x = this.body.getPosition().x * 32
+        this.transform.position.y = this.body.getPosition().y * 32
         this.transform.rotation = this.body.getAngle() / (Math.PI / 180);
     }
 
@@ -180,7 +216,7 @@ export class GameObject {
         if (!tf) return
         const body = this.app.plWorld.createBody({
             type: (rb && !rb.isStatic) ? "dynamic" : "static",
-            position: {x: (tf.position.x + tf.scale.x / 2)/32, y: (tf.position.y + tf.scale.y / 2)/32},
+            position: {x: tf.position.x / 32, y: tf.position.y / 32},
             angle: tf.rotation * (Math.PI / 180),
             
         })
@@ -269,6 +305,17 @@ export class App {
 
     curScene: string = "";
 
+    renderer: THREE.WebGLRenderer;
+    renderScene: THREE.Scene;
+    camera: THREE.OrthographicCamera;
+
+    screenSpaceScene: THREE.Scene;
+    screenSpaceCamera: THREE.OrthographicCamera;
+
+    renderTarget: THREE.WebGLRenderTarget;
+
+    renderScale: Vector2 = new Vector2(360, 180)
+
     constructor (args: ApplicationArguments = {
         targetFramerate: 60,
         downscaleFactor: 1,
@@ -276,56 +323,84 @@ export class App {
     }) {
         this.args = args
 
-        this.plWorld = new pl.World({gravity: {x:0, y:10}});
+        // Physics
+        this.plWorld = new pl.World({gravity: {x:0, y:-10}});
 
-        // Find <canvas> and get context
-        this.canvas = document.querySelector(this.args.canvasSelector!) as HTMLCanvasElement;
-        this.resizeCanvas();
-        
-        if (!this.canvas) {
-            Logger.error("Canvas not found");
-        } else {
-            this.ctx = this.canvas.getContext("2d");
-        }
+
+        // Rendering
+        const LOW_W = this.renderScale.x; const LOW_H = this.renderScale.y
+        this.renderTarget = new THREE.WebGLRenderTarget(LOW_W, LOW_H, {
+            magFilter: THREE.NearestFilter,
+            minFilter: THREE.NearestFilter
+        })
+
+        // Rendering objects
+        this.renderer = new THREE.WebGLRenderer({ antialias: false });
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(this.renderer.domElement);
+
+        this.renderScene = new THREE.Scene();
+
+        this.camera = new THREE.OrthographicCamera(
+            -LOW_W / 2, LOW_W / 2,
+            LOW_H / 2, -LOW_H / 2,
+            0.1, 1000
+        );
+        this.camera.position.z = 10;
+
+        // Scaling up to screen
+        this.screenSpaceCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+        this.renderer.setClearColor(THREE.Color.NAMES.blue);
+
+        this.screenSpaceScene = new THREE.Scene;
+        this.screenSpaceScene.add(new THREE.Mesh(
+            new THREE.PlaneGeometry(2, 2),
+            new THREE.MeshBasicMaterial({ map: this.renderTarget.texture })
+        ))
+
+        this.resize();
+        window.addEventListener("resize", () => {
+            this.resize();
+        })
 
         Logger.success("Application initialized successfully")
     }
 
+    private resize() {
+        const xScaleFactor = Math.ceil(window.innerWidth / this.renderScale.x);
+        const yScaleFactor = Math.ceil(window.innerHeight / this.renderScale.y);
+
+        const w = this.renderScale.x * xScaleFactor; 
+        const h = this.renderScale.y * yScaleFactor;
+        this.renderer.setSize(w, h);
+
+        this.camera.left = -w / 8;
+        this.camera.right = w / 8;
+
+        this.camera.top = h / 8;
+        this.camera.bottom = -h / 8;
+        this.camera.updateProjectionMatrix();
+    }
+
     public start() {
-        if (this.ctx == null) {
+        if (this.renderer == null) {
             Logger.error("Failed to start, rendering context null");
             return;
         }
 
         this.isTicking = true;
 
-        this.eventLoopIntervalID = setInterval(() => {
+        this.renderer.setAnimationLoop(() => {
             this.plWorld.step(1/this.args.targetFramerate!, 10, 6);
-            this.resizeCanvas();
+            this.update();
 
-            for (const o of this.objects) {
-                o.onUpdate()
-            }
-
-            for (const o of this.objects) {
-                o.onLateUpdate()
-            }
-
-            this.draw();
-
-            for (const o of this.objectAdditionBuffer) {
-                this.objects.push(o);
-                o.onInitialized();
-            }
-
-            for (const o of this.objectRemovalBuffer) {
-                o.onDestroyed();
-                this.objects.splice(this.objects.indexOf(o), 1);
-            }
-
-            this.objectAdditionBuffer.length = 0;
-            this.objectRemovalBuffer.length = 0;
-        }, 1000/this.args.targetFramerate!)
+            this.renderer.setRenderTarget(this.renderTarget);
+            this.renderer.render(this.renderScene, this.camera);
+            
+            this.renderer.setRenderTarget(null);
+            this.renderer.render(this.screenSpaceScene, this.screenSpaceCamera);
+        })
     }
 
     public stop() {
@@ -335,38 +410,30 @@ export class App {
         }
 
         this.isTicking = false;
-        clearInterval(this.eventLoopIntervalID);
+        this.renderer.setAnimationLoop(null);
     }
 
-    private resizeCanvas() {
-        this.canvas!.width = document.body.clientWidth / this.args.downscaleFactor!;
-        this.canvas!.height = document.body.clientHeight / this.args.downscaleFactor!;
-    }
-
-    public draw() {
-        this.ctx!.imageSmoothingEnabled = false;
-        this.ctx!.fillStyle = "#9aafef";
-        this.ctx!.fillRect(0, 0, this.canvas!.width, this.canvas!.height)
-        const sorted = this.drawBuffer.sort((a, b) => b.depth - a.depth);
-        for (const call of sorted) {
-            const t = call.transform;
-            const cx = call.transform.position.x + t.scale.x / 2
-            const cy = call.transform.position.y + t.scale.y / 2
-
-            this.ctx!.save()
-            this.ctx!.scale(call.transform.scale.x / Math.abs(call.transform.scale.x), call.transform.scale.y / Math.abs(call.transform.scale.y))
-            this.ctx!.translate(cx, cy)
-            this.ctx!.rotate(call.transform.rotation * (Math.PI / 180))
-
-            this.ctx!.drawImage(
-                call.src, 
-                -(call.transform.scale.x / 2), 
-                -(call.transform.scale.y / 2), 
-                call.transform.scale.x, call.transform.scale.y)
-
-            this.ctx!.restore();
+    private update() {
+        for (const o of this.objects) {
+            o.onUpdate()
         }
-        this.drawBuffer.length = 0;
+
+        for (const o of this.objects) {
+            o.onLateUpdate()
+        }
+
+        for (const o of this.objectAdditionBuffer) {
+            this.objects.push(o);
+            o.onInitialized();
+        }
+
+        for (const o of this.objectRemovalBuffer) {
+            o.onDestroyed();
+            this.objects.splice(this.objects.indexOf(o), 1);
+        }
+
+        this.objectAdditionBuffer.length = 0;
+        this.objectRemovalBuffer.length = 0;
     }
 
     public addObject(object: GameObject) {
@@ -403,9 +470,6 @@ export class App {
         }
 
         Logger.success(`Loading scene, ${name}`)
-
-        this.ctx!.fillStyle = "#9aafef";
-        this.ctx!.fillRect(0, 0, this.canvas!.width, this.canvas!.height)
 
         this.curScene = name;
 
