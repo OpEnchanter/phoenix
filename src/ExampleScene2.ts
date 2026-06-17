@@ -2,9 +2,9 @@ import * as Phoenix from "./lib/phoenix.ts"
 
 export class Scene extends Phoenix.Scene {
     public override onLoad(app: Phoenix.App): void {
-        for (let i = 0; i < 450; i++) {
+        for (let i = 0; i < 100; i++) {
             app.addObject(app.createObject(
-                new Phoenix.Transform(new Phoenix.Vector2(i,30), Math.abs(Math.random())*90, new Phoenix.Vector2(25, 25)),
+                new Phoenix.Transform(new Phoenix.Vector2(0,30+i*15), Math.abs(Math.random())*90, new Phoenix.Vector2(25, 25)),
                 new Phoenix.Sprite("/assets/null.png"),
                 new Phoenix.Renderer(0),
                 new Phoenix.BoxCollider(new Phoenix.Vector2(25, 25)),

@@ -118,8 +118,10 @@ export class Renderer extends Component {
 
         const texture = this.loadTexture(this.sprite.src);
 
+        const geo = new THREE.PlaneGeometry(this.transform?.scale.x, this.transform?.scale.y)
+
         this.mesh = new THREE.Mesh(
-            new THREE.PlaneGeometry(this.transform?.scale.x, this.transform?.scale.y),
+            geo,
             new THREE.MeshBasicMaterial({
                 map: texture,
                 transparent: true
@@ -140,7 +142,8 @@ export class Renderer extends Component {
         if (!this.transform || !this.mesh || !this.parent) return
         this.mesh.position.set(
             this.transform.position.x, 
-            this.transform.position.y, 0
+            this.transform.position.y,
+            this.depth
         )
 
         this.mesh.rotation.set(
@@ -331,7 +334,8 @@ export class App {
         const LOW_W = this.args.renderScale!.x; const LOW_H = this.args.renderScale!.y
         this.renderTarget = new THREE.WebGLRenderTarget(LOW_W, LOW_H, {
             magFilter: THREE.NearestFilter,
-            minFilter: THREE.NearestFilter
+            minFilter: THREE.NearestFilter,
+            colorSpace: THREE.LinearSRGBColorSpace
         })
 
         // Rendering objects
@@ -353,10 +357,59 @@ export class App {
 
         this.renderer.setClearColor(THREE.Color.NAMES.blue);
 
+        const vshad = `
+
+            out vec3 fragPosition;
+            out vec2 fragTexCoord;
+            out vec3 fragNormal;
+
+            void main() {
+                fragPosition = vec3(modelMatrix * vec4(position, 1.0));
+                fragTexCoord = uv;
+                fragNormal = normalize(normalMatrix * normal);
+
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `
+
+        const fshad = `
+            in vec2 fragTexCoord;
+
+            uniform sampler2D uTex;
+            uniform float t;
+
+            out vec4 fragColor;
+
+            vec4 linearToSRGB(vec4 value) {
+                return vec4(mix(pow(value.rgb, vec3(1.0 / 2.2)), value.rgb * 12.92, lessThanEqual(value.rgb, vec3(0.0031308))), value.a);
+            }
+
+            void main() {
+                vec4 p1 = texture(uTex, fragTexCoord + vec2(sin(fragTexCoord.y*-4.0)/10.0, sin(fragTexCoord.x*4.0+t)/10.0));
+                fragColor = linearToSRGB(p1);
+            }
+        `
+
+        let t = 0.0;
+
+        document.addEventListener("keydown", (e)=>{
+            if (e.key.toLowerCase() == "w") {
+                t += 1.0;
+            }
+        })
+
         this.screenSpaceScene = new THREE.Scene;
         this.screenSpaceScene.add(new THREE.Mesh(
             new THREE.PlaneGeometry(2, 2),
-            new THREE.MeshBasicMaterial({ map: this.renderTarget.texture })
+            new THREE.ShaderMaterial({ 
+                glslVersion: THREE.GLSL3,
+                uniforms: {
+                    uTex: { value: this.renderTarget.texture },
+                    t: { value: t }
+                },
+                vertexShader: vshad,
+                fragmentShader: fshad
+            })
         ))
 
         this.resize();

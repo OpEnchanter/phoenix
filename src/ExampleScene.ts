@@ -4,7 +4,7 @@ export class Scene extends Phoenix.Scene {
     public override onLoad(app: Phoenix.App): void {
         for (let i = 0; i < 50; i++) {
             app.addObject(app.createObject(
-                new Phoenix.Transform(new Phoenix.Vector2(i,100), Math.abs(Math.random())*90, new Phoenix.Vector2(25, 25)),
+                new Phoenix.Transform(new Phoenix.Vector2(i,100+i*20), Math.abs(Math.random())*90, new Phoenix.Vector2(25, 25)),
                 new Phoenix.Sprite("/assets/brick.png"),
                 new Phoenix.Renderer(0),
                 new Phoenix.BoxCollider(new Phoenix.Vector2(25, 25)),
