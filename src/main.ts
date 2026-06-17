@@ -5,7 +5,7 @@ import * as Example2 from "./ExampleScene2.ts";
 const app: Phoenix.App = new Phoenix.App({
     targetFramerate: 60,
     zoom: 1,
-    renderScale: new Phoenix.Vector2(2560, 1440)
+    renderScale: new Phoenix.Vector2(1920, 1080)
 });
 
 app.addScene("example", new Example.Scene())
