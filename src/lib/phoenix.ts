@@ -1,7 +1,51 @@
 import chalk from "chalk";
 import * as pl from "planck";
 import * as THREE from "three";
-import type { Vector } from "three/examples/jsm/Addons.js";
+
+// Shader variables
+type shaderOps = {
+    vertexShader: string,
+    fragmentShader: string,
+    uniforms: Record<string, {value: any}>
+}
+
+const vshad = `
+    out vec3 fragPosition;
+    out vec2 fragTexCoord;
+    out vec3 fragNormal;
+
+    void main() {
+        fragPosition = vec3(modelMatrix * vec4(position, 1.0));
+        fragTexCoord = uv;
+        fragNormal = normalize(normalMatrix * normal);
+
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+`
+
+const fshad = `
+    in vec2 fragTexCoord;
+
+    uniform sampler2D uTex;
+    uniform float t;
+
+    out vec4 fragColor;
+
+    vec4 linearToSRGB(vec4 value) {
+        return vec4(mix(pow(value.rgb, vec3(1.0 / 2.2)), value.rgb * 12.92, lessThanEqual(value.rgb, vec3(0.0031308))), value.a);
+    }
+
+    void main() {
+        vec4 p1 = texture(uTex, fragTexCoord);
+        fragColor = linearToSRGB(p1);
+    }
+`
+
+const defaultShader: shaderOps = {
+    vertexShader: vshad,
+    fragmentShader: fshad,
+    uniforms: {}
+}
 
 // Generic Functions
 export class Vector2 {
@@ -279,6 +323,7 @@ type ApplicationArguments = {
     targetFramerate?: number,
     zoom?: number,
     renderScale?: Vector2
+    shaderOverride?: shaderOps
 }
 
 type DrawRequest = {
@@ -319,12 +364,15 @@ export class App {
 
     renderScale: Vector2 = new Vector2(2560, 1440)
 
-    constructor (args: ApplicationArguments = {
-        targetFramerate: 60,
-        zoom: 1,
-        renderScale: new Vector2(1920, 1080)
-    }) {
-        this.args = args
+    constructor (args: ApplicationArguments) {
+
+        const defaultArgs: ApplicationArguments = {
+            targetFramerate: 60,
+            zoom: 1,
+            renderScale: new Vector2(1920, 1080)
+        };
+
+        this.args = {...defaultArgs, ...args} as ApplicationArguments;
 
         // Physics
         this.plWorld = new pl.World({gravity: {x:0, y:-10}});
@@ -357,39 +405,6 @@ export class App {
 
         this.renderer.setClearColor(THREE.Color.NAMES.blue);
 
-        const vshad = `
-
-            out vec3 fragPosition;
-            out vec2 fragTexCoord;
-            out vec3 fragNormal;
-
-            void main() {
-                fragPosition = vec3(modelMatrix * vec4(position, 1.0));
-                fragTexCoord = uv;
-                fragNormal = normalize(normalMatrix * normal);
-
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            }
-        `
-
-        const fshad = `
-            in vec2 fragTexCoord;
-
-            uniform sampler2D uTex;
-            uniform float t;
-
-            out vec4 fragColor;
-
-            vec4 linearToSRGB(vec4 value) {
-                return vec4(mix(pow(value.rgb, vec3(1.0 / 2.2)), value.rgb * 12.92, lessThanEqual(value.rgb, vec3(0.0031308))), value.a);
-            }
-
-            void main() {
-                vec4 p1 = texture(uTex, fragTexCoord + vec2(sin(fragTexCoord.y*-4.0)/10.0, sin(fragTexCoord.x*4.0+t)/10.0));
-                fragColor = linearToSRGB(p1);
-            }
-        `
-
         let t = 0.0;
 
         document.addEventListener("keydown", (e)=>{
@@ -407,8 +422,8 @@ export class App {
                     uTex: { value: this.renderTarget.texture },
                     t: { value: t }
                 },
-                vertexShader: vshad,
-                fragmentShader: fshad
+                vertexShader: this.args.shaderOverride ? this.args.shaderOverride.vertexShader : defaultShader.vertexShader,
+                fragmentShader: this.args.shaderOverride ? this.args.shaderOverride.fragmentShader : defaultShader.fragmentShader
             })
         ))
 

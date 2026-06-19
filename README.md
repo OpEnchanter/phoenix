@@ -1,5 +1,5 @@
 # phoenix
-A 2D game framework made for browser-based video games designed to mimic some design paradigms of the Unity game engine. Using Bun + Typescript and bundled with Vite. Uses the [Planck.js](https://piqnt.github.io/planck.js/docs/body.html) physics engine.
+A 2D game framework made for browser-based video games designed to mimic some design paradigms of the Unity game engine. Using Bun + Typescript and bundled with Vite. Uses the [Planck.js](https://piqnt.github.io/planck.js/docs/body.html) physics engine and [THREE.js](https://threejs.org/) for rendering.
 
 ## Loading
 The entrypoint into the application must be loaded in a HTML document.
@@ -35,6 +35,7 @@ The entrypoint into the application must be loaded in a HTML document.
         <script type="module" src="src/main.ts"></script>
     </body>
 </html>
+
 ```
 
 In this example, the HTML provides a canvas element, styled to fit the screen properly and loads the Typescript entrypoint.
@@ -74,7 +75,7 @@ app.addObject(app.createObject(
 
 This object has 3 completely empty components attached to it. This is a demonstration of how the components system works as the `Phoenix.Component()` class is designed to be extended to create custom behaviour.
 
-### Components
+### Component
 Without components, objects do not render, have a sprite, or even have a position. Components are able to provide behaviour to objects through scripts. Components have multiple distinct functions that can be overridden to create the aforementioned behaviour.
 
 **Component Functions**
