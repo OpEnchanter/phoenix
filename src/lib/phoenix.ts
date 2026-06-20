@@ -138,11 +138,14 @@ export class Renderer extends Component {
 
     mesh: THREE.Mesh | undefined = undefined;
 
+    shader: shaderOps = defaultShader;
+
     depth: number;
 
-    constructor (depth: number) {
+    constructor (depth: number, shaderOverride?: shaderOps) {
         super();
         this.depth = depth;
+        if (shaderOverride) this.shader = shaderOverride;
     }
 
     loadTexture(url: string): THREE.Texture {
@@ -166,8 +169,13 @@ export class Renderer extends Component {
 
         this.mesh = new THREE.Mesh(
             geo,
-            new THREE.MeshBasicMaterial({
-                map: texture,
+            new THREE.ShaderMaterial({
+                vertexShader: this.shader.vertexShader,
+                fragmentShader: this.shader.fragmentShader,
+                uniforms: {
+                    uTex: { value: texture},
+                    ...this.shader.uniforms
+                },
                 transparent: true
             })
         )
@@ -405,14 +413,6 @@ export class App {
 
         this.renderer.setClearColor(THREE.Color.NAMES.blue);
 
-        let t = 0.0;
-
-        document.addEventListener("keydown", (e)=>{
-            if (e.key.toLowerCase() == "w") {
-                t += 1.0;
-            }
-        })
-
         this.screenSpaceScene = new THREE.Scene;
         this.screenSpaceScene.add(new THREE.Mesh(
             new THREE.PlaneGeometry(2, 2),
@@ -420,7 +420,7 @@ export class App {
                 glslVersion: THREE.GLSL3,
                 uniforms: {
                     uTex: { value: this.renderTarget.texture },
-                    t: { value: t }
+                    ...this.args.shaderOverride?.uniforms
                 },
                 vertexShader: this.args.shaderOverride ? this.args.shaderOverride.vertexShader : defaultShader.vertexShader,
                 fragmentShader: this.args.shaderOverride ? this.args.shaderOverride.fragmentShader : defaultShader.fragmentShader
