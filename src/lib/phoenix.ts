@@ -31,6 +31,20 @@ const fshad = `
 
     out vec4 fragColor;
 
+    void main() {
+        vec4 p1 = texture(uTex, fragTexCoord);
+        fragColor = p1;
+    }
+`
+
+const screenfshad = `
+    in vec2 fragTexCoord;
+
+    uniform sampler2D uTex;
+    uniform float t;
+
+    out vec4 fragColor;
+
     vec4 linearToSRGB(vec4 value) {
         return vec4(mix(pow(value.rgb, vec3(1.0 / 2.2)), value.rgb * 12.92, lessThanEqual(value.rgb, vec3(0.0031308))), value.a);
     }
@@ -44,6 +58,12 @@ const fshad = `
 const defaultShader: shaderOps = {
     vertexShader: vshad,
     fragmentShader: fshad,
+    uniforms: {}
+}
+
+const defaultScreenShader: shaderOps = {
+    vertexShader: vshad,
+    fragmentShader: screenfshad,
     uniforms: {}
 }
 
@@ -170,6 +190,7 @@ export class Renderer extends Component {
         this.mesh = new THREE.Mesh(
             geo,
             new THREE.ShaderMaterial({
+                glslVersion: THREE.GLSL3,
                 vertexShader: this.shader.vertexShader,
                 fragmentShader: this.shader.fragmentShader,
                 uniforms: {
@@ -332,6 +353,7 @@ type ApplicationArguments = {
     zoom?: number,
     renderScale?: Vector2
     shaderOverride?: shaderOps
+    clearColor?: number
 }
 
 type DrawRequest = {
@@ -370,14 +392,21 @@ export class App {
 
     renderTarget: THREE.WebGLRenderTarget;
 
-    renderScale: Vector2 = new Vector2(2560, 1440)
+    renderScale: Vector2 = new Vector2(2560, 1440);
+
+    public timescale: number = 1;
+    public deltaTime: number = 0;
+
+    private oldTimestamp: number = 0;
 
     constructor (args: ApplicationArguments) {
 
         const defaultArgs: ApplicationArguments = {
             targetFramerate: 60,
             zoom: 1,
-            renderScale: new Vector2(1920, 1080)
+            renderScale: new Vector2(1920, 1080),
+            shaderOverride: defaultScreenShader,
+            clearColor: THREE.Color.NAMES.black
         };
 
         this.args = {...defaultArgs, ...args} as ApplicationArguments;
@@ -411,7 +440,7 @@ export class App {
         // Scaling up to screen
         this.screenSpaceCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
-        this.renderer.setClearColor(THREE.Color.NAMES.blue);
+        this.renderer.setClearColor(this.args.clearColor!);
 
         this.screenSpaceScene = new THREE.Scene;
         this.screenSpaceScene.add(new THREE.Mesh(
@@ -431,6 +460,8 @@ export class App {
         window.addEventListener("resize", () => {
             this.resize();
         })
+
+        this.oldTimestamp = Date.now();
 
         Logger.success("Application initialized successfully")
     }
@@ -460,7 +491,7 @@ export class App {
         this.isTicking = true;
 
         this.renderer.setAnimationLoop(() => {
-            this.plWorld.step(1/this.args.targetFramerate!, 10, 6);
+            this.plWorld.step(this.deltaTime / 1000, 10, 6);
             this.update();
 
             this.renderer.setRenderTarget(this.renderTarget);
@@ -468,6 +499,10 @@ export class App {
             
             this.renderer.setRenderTarget(null);
             this.renderer.render(this.screenSpaceScene, this.screenSpaceCamera);
+
+            this.deltaTime = (Date.now() - this.oldTimestamp) * this.timescale;
+            console.log(this.deltaTime);
+            this.oldTimestamp = Date.now();
         })
     }
 

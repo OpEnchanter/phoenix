@@ -150,3 +150,7 @@ const transform: Phoenix.Transformation = new Phoenix.Transformation(
 )
 ```
 Creates a transform with position (0,0) rotation of 0deg and scale of 0x0.
+
+---
+
+*Made with :heart:*

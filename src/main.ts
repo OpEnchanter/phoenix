@@ -5,8 +5,12 @@ import * as Example2 from "./ExampleScene2.ts";
 const app: Phoenix.App = new Phoenix.App({
     targetFramerate: 60,
     zoom: 1/4,
-    renderScale: new Phoenix.Vector2(360, 180)
+    renderScale: new Phoenix.Vector2(360, 180),
+    clearColor: 0x5cdbfd
 });
+
+app.timescale = 1;
+
 
 app.addScene("example", new Example.Scene())
 app.addScene("example2", new Example2.Scene())
