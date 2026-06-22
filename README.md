@@ -106,23 +106,32 @@ Arguments that can be supplied to the App.
 
 ```typescript
 type ApplicationArguments = {
-    targetFramerate: number,
-    downscaleFactor: number,
-    canvasSelector: string
-}
+    zoom?: number,
+    renderScale?: Vector2,
+    shaderOverride?: shaderOps,
+    clearColor?: number,
+    timescale?: number
+};
 ```
 
-Shown in the above example these areguments can include the target framerate, a factor to divide the resolution of the output by and a selector for the canvas. These arguments are not required to be added to the app, but can be to customize behaviour.
+Shown above is the type definition for the `ApplicationArguments`. These can modify many different features with regard to the application's function. All of these arguments are optional and have internal defaults to prevent crashes.
+
+- **zoom** - Changes how zoomed-in the camera is on the scene.
+- **renderScale** - The resolution that the output image is rendered at.
+- **shaderOverride** - Overrides the screen-space shader. Allows for screen-wide effects. Uses GLSL3.
+- **clearColor** - Changes the color that the application fills the screen with when clearing after each frame. Essentially a background
+- **timeScale** - The speed at which time progresses, does not affect framerate. This changes the deltaTime which is used in physics calculations, so it will slow down physics as well as anything else `app.deltaTime` is used to calculate.
 
 ```typescript
 const app: Phoenix.App = new Phoenix.App({
-    targetFramerate: 120,
-    downscaleFactor: 1,
-    canvasSelector: ".myCanvas"
+    zoom: 1/4,
+    renderScale: new Phoenix.Vector2(360, 180),
+    clearColor: 0x5cdbfd,
+    timescale: 1/2
 })
 ```
 
-In this example, the app would attempt to run at 120 FPS and would try to find it's canvas by searching for the first element with the selector `.myCanvas` (class myCanvas).
+In this example, the app would render at a resolution of `360x180` and would be zoomed in 4x. It would also show a background color of light blue, and time would progress at half speed. There is no shader override so objects will maintain their unmodified appearance.
 
 ### Vector2
 A two dimensional vector. Stores `x` and `y` component.
