@@ -351,9 +351,10 @@ export class Scene {
 type ApplicationArguments = {
     targetFramerate?: number,
     zoom?: number,
-    renderScale?: Vector2
-    shaderOverride?: shaderOps
-    clearColor?: number
+    renderScale?: Vector2,
+    shaderOverride?: shaderOps,
+    clearColor?: number,
+    timescale?: number
 }
 
 type DrawRequest = {
@@ -394,7 +395,6 @@ export class App {
 
     renderScale: Vector2 = new Vector2(2560, 1440);
 
-    public timescale: number = 1;
     public deltaTime: number = 0;
 
     private oldTimestamp: number = 0;
@@ -406,7 +406,8 @@ export class App {
             zoom: 1,
             renderScale: new Vector2(1920, 1080),
             shaderOverride: defaultScreenShader,
-            clearColor: THREE.Color.NAMES.black
+            clearColor: THREE.Color.NAMES.black,
+            timescale: 1
         };
 
         this.args = {...defaultArgs, ...args} as ApplicationArguments;
@@ -500,7 +501,7 @@ export class App {
             this.renderer.setRenderTarget(null);
             this.renderer.render(this.screenSpaceScene, this.screenSpaceCamera);
 
-            this.deltaTime = (Date.now() - this.oldTimestamp) * this.timescale;
+            this.deltaTime = (Date.now() - this.oldTimestamp) * this.args.timescale!;
             console.log(this.deltaTime);
             this.oldTimestamp = Date.now();
         })

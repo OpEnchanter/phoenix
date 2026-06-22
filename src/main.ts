@@ -6,10 +6,9 @@ const app: Phoenix.App = new Phoenix.App({
     targetFramerate: 60,
     zoom: 1/4,
     renderScale: new Phoenix.Vector2(360, 180),
-    clearColor: 0x5cdbfd
+    clearColor: 0x5cdbfd,
+    timescale: 1
 });
-
-app.timescale = 1;
 
 
 app.addScene("example", new Example.Scene())
