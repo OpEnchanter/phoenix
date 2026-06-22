@@ -349,7 +349,6 @@ export class Scene {
 }
 
 type ApplicationArguments = {
-    targetFramerate?: number,
     zoom?: number,
     renderScale?: Vector2,
     shaderOverride?: shaderOps,
@@ -402,7 +401,6 @@ export class App {
     constructor (args: ApplicationArguments) {
 
         const defaultArgs: ApplicationArguments = {
-            targetFramerate: 60,
             zoom: 1,
             renderScale: new Vector2(1920, 1080),
             shaderOverride: defaultScreenShader,
