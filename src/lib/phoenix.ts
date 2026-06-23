@@ -398,6 +398,9 @@ export class App {
 
     private oldTimestamp: number = 0;
 
+    private keys: Record<string, boolean> = {};
+    private mousePos = new Vector2(0, 0);
+
     constructor (args: ApplicationArguments) {
 
         const defaultArgs: ApplicationArguments = {
@@ -442,8 +445,11 @@ export class App {
         this.renderer.setClearColor(this.args.clearColor!);
 
         this.screenSpaceScene = new THREE.Scene;
+
         this.screenSpaceScene.add(new THREE.Mesh(
             new THREE.PlaneGeometry(2, 2),
+
+            // Screen-space shader injection
             new THREE.ShaderMaterial({ 
                 glslVersion: THREE.GLSL3,
                 uniforms: {
@@ -455,12 +461,11 @@ export class App {
             })
         ))
 
+        // Window resize handler
         this.resize();
         window.addEventListener("resize", () => {
             this.resize();
         })
-
-        this.oldTimestamp = Date.now();
 
         Logger.success("Application initialized successfully")
     }
@@ -481,14 +486,41 @@ export class App {
         this.camera.updateProjectionMatrix();
     }
 
+    public getKey(k: string) {
+        return this.keys[k.toLowerCase()] as boolean
+    }
+
+    public getMousePos() {
+        return this.mousePos;
+    }
+
     public start() {
         if (this.renderer == null) {
             Logger.error("Failed to start, rendering context null");
             return;
         }
 
+        // Register input event handlers
+        document.addEventListener("keydown", (e) => {
+            this.keys[e.key.toLowerCase() as string] = true
+        });
+
+        document.addEventListener("keyup", (e) => {
+            this.keys[e.key.toLowerCase() as string] = false
+        });
+
+        document.addEventListener("mousemove", (e) => {
+            this.mousePos.x = e.clientX;
+            this.mousePos.y = e.clientY;
+        })
+
+        // Begin measuring deltaTime
+        this.oldTimestamp = Date.now();
+
+        // Save running status
         this.isTicking = true;
 
+        // Begin frame loop
         this.renderer.setAnimationLoop(() => {
             this.plWorld.step(this.deltaTime / 1000, 10, 6);
             this.update();
@@ -500,7 +532,6 @@ export class App {
             this.renderer.render(this.screenSpaceScene, this.screenSpaceCamera);
 
             this.deltaTime = (Date.now() - this.oldTimestamp) * this.args.timescale!;
-            console.log(this.deltaTime);
             this.oldTimestamp = Date.now();
         })
     }

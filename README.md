@@ -162,4 +162,38 @@ Creates a transform with position (0,0) rotation of 0deg and scale of 0x0.
 
 ---
 
+**Feature Checklist**
+
+- Main Application Class
+    - [x] Physics Initialization (planck.js)
+    - [x] Renderer Initialization (three.js)
+    - [x] Object Management (addition and removal)
+    - [x] Start and Stop running game
+    - [x] Timing (deltaTime)
+    - [x] Screen Space Shader & Shader Override
+    - [x] Keyboard Input Tracking
+    - [x] Mouse Input Tracking
+
+- Components
+    - [x] Component Parent Class
+    - [x] Transform
+    - [x] Renderer
+    - [x] Sprite
+    - [x] Rigidbody
+    - [x] Box Collider
+    - [ ] Circle Collider
+    - [ ] Camera
+
+- Objects
+    - [x] Initialization
+    - [x] Component Usage
+
+---
+
+*Silly statistics :3*
+
+![Hackatime](https://hackatime.hackclub.com/api/v1/badge/U0ADGEN6745/OpEnchanter/phoenix)
+
+---
+
 *Made with :heart:*
