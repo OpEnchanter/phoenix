@@ -1,8 +1,9 @@
 # phoenix
 A 2D game framework made for browser-based video games designed to mimic some design paradigms of the Unity game engine. Using Bun + Typescript and bundled with Vite. Uses the [Planck.js](https://piqnt.github.io/planck.js/docs/body.html) physics engine and [THREE.js](https://threejs.org/) for rendering.
 
-## Loading
+## Usage
 The entrypoint into the application must be loaded in a HTML document.
+In this example, the HTML provides a canvas element, styled to fit the screen properly and loads the Typescript entrypoint.
 
 ```html
 <!DOCTYPE html>
@@ -38,7 +39,29 @@ The entrypoint into the application must be loaded in a HTML document.
 
 ```
 
-In this example, the HTML provides a canvas element, styled to fit the screen properly and loads the Typescript entrypoint.
+```typescript
+import * as Phoenix from "./lib/phoenix.ts"
+
+// Create an app instance with options supplied
+app: Phoenix.App = new Phoenix.App({
+    zoom: 1/1,
+    renderScale: new Phoenix.Vector2(1920, 1080),
+    clearColor: 0x5cdbfd,
+    timescale: 1
+})
+
+// Add an object with a transform, sprite and renderer
+app.addObject(app.createObject(
+    new Phoenix.Transform(new Phoenix.Vector2(0, 0), 0, new Phoenix.Vector2(16, 16)),
+    new Phoenix.Sprite("/assets/brick.png"),
+    new Phoenix.Renderer(0)
+))
+
+app.start() // Start the app
+
+```
+
+This Typescript code will initialize an app, add an object and start the app.
 
 ## Features
 
@@ -187,6 +210,11 @@ Creates a transform with position (0,0) rotation of 0deg and scale of 0x0.
 - Objects
     - [x] Initialization
     - [x] Component Usage
+
+- Generics
+    - [x] Vector2
+    - [x] Logger
+    - [x] Transformation
 
 ---
 

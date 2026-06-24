@@ -1,6 +1,7 @@
 import * as Phoenix from "./lib/phoenix.ts";
-import * as Example from "./ExampleScene.ts";
-import * as Example2 from "./ExampleScene2.ts";
+import * as ImpulseComponentExample from "./ImpulseComponentExample.ts";
+import * as ManyObjectsExample from "./ManyObjectsExample.ts";
+import * as ControllableObjectExample from "./ControllableObjectExample.ts";
 
 const app: Phoenix.App = new Phoenix.App({
     zoom: 1/1,
@@ -10,13 +11,20 @@ const app: Phoenix.App = new Phoenix.App({
 });
 
 
-app.addScene("example", new Example.Scene())
-app.addScene("example2", new Example2.Scene())
+app.addScene("0", new ImpulseComponentExample.Scene())
+app.addScene("1", new ManyObjectsExample.Scene())
+app.addScene("2", new ControllableObjectExample.Scene())
 
-app.loadScene("example")
+app.loadScene("0")
+
+let cur = 0;
+let max = 2;
 
 document.addEventListener("keydown", (e) => {
     if (e.key.toLowerCase() == "h") {
-        app.loadScene((app.getScene() == "example") ? "example2" : "example");
+        cur = (cur + 1) % (max+1);
+        app.loadScene(cur.toString());
+    } else if (e.key.toLocaleLowerCase() == "r") {
+        app.loadScene(cur.toString());
     }
 })
