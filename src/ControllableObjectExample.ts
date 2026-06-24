@@ -52,7 +52,7 @@ export class Scene extends Phoenix.Scene {
     public override onLoad(app: Phoenix.App): void {
         const player = app.createObject(
             new Phoenix.Transform(new Phoenix.Vector2(0, 0), 0, new Phoenix.Vector2(32, 32)),
-            new Phoenix.Sprite("/assets/brick.png"),
+            new Phoenix.Sprite("assets/brick.png"),
             new Phoenix.Renderer(0),
             new Phoenix.BoxCollider(new Phoenix.Vector2(32, 32)),
             new Phoenix.Rigidbody(1, 1, false),
@@ -69,7 +69,7 @@ export class Scene extends Phoenix.Scene {
 
         app.addObject(app.createObject(
             new Phoenix.Transform(new Phoenix.Vector2(0,-80), 0, new Phoenix.Vector2(2000, 100)),
-            new Phoenix.Sprite("/assets/null.png"),
+            new Phoenix.Sprite("assets/null.png"),
             new Phoenix.Renderer(0),
             new Phoenix.BoxCollider(new Phoenix.Vector2(2000, 100)),
             new Phoenix.Rigidbody(1, 1, true)
