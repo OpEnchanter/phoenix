@@ -24,15 +24,47 @@ class ControllableComponent extends Phoenix.Component {
     }
 }
 
+class CameraController extends Phoenix.Component {
+
+    target: Phoenix.GameObject;
+    targetTransform: Phoenix.Transform | undefined = undefined;
+
+    transform: Phoenix.Transform | undefined = undefined;
+
+    constructor(target: Phoenix.GameObject) {
+        super()
+        this.target = target;
+    }
+
+    public override onInitialized(): void {
+        this.targetTransform = this.target.getComponent(Phoenix.Transform);
+        this.transform = this.parent?.getComponent(Phoenix.Transform);
+    }
+
+    public override onUpdate(): void {
+        if (!this.transform || !this.targetTransform) return
+        this.transform.position.x += (this.targetTransform.position.x - this.transform.position.x) / 4;
+        this.transform.position.y += (this.targetTransform.position.y - this.transform.position.y) / 4;
+    }
+}
+
 export class Scene extends Phoenix.Scene {
     public override onLoad(app: Phoenix.App): void {
-        app.addObject(app.createObject(
+        const player = app.createObject(
             new Phoenix.Transform(new Phoenix.Vector2(0, 0), 0, new Phoenix.Vector2(32, 32)),
             new Phoenix.Sprite("/assets/brick.png"),
             new Phoenix.Renderer(0),
             new Phoenix.BoxCollider(new Phoenix.Vector2(32, 32)),
             new Phoenix.Rigidbody(1, 1, false),
             new ControllableComponent()
+        )
+
+        app.addObject(player)
+
+        app.addObject(app.createObject(
+            new Phoenix.Transform(new Phoenix.Vector2(0, 0), 0, new Phoenix.Vector2(0, 0)),
+            new CameraController(player),
+            new Phoenix.Camera()
         ))
 
         app.addObject(app.createObject(

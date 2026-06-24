@@ -204,8 +204,9 @@ Creates a transform with position (0,0) rotation of 0deg and scale of 0x0.
     - [x] Sprite
     - [x] Rigidbody
     - [x] Box Collider
-    - [ ] Circle Collider
-    - [ ] Camera
+    - [x] Circle Collider
+    - [x] Camera
+    - [ ] Text Renderer
 
 - Objects
     - [x] Initialization

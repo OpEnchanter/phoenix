@@ -235,6 +235,14 @@ export class BoxCollider extends Component {
     }
 }
 
+export class CircleCollider extends Component {
+    radius: number;
+    constructor (radius: number) {
+        super();
+        this.radius = radius;
+    }
+}
+
 export class Rigidbody extends Component {
     density: number;
     friction: number;
@@ -269,6 +277,22 @@ export class Rigidbody extends Component {
     }
 }
 
+export class Camera extends Component {
+    rendererCamera: THREE.Camera | undefined = undefined;
+    transform: Transform | undefined = undefined;
+
+    public override onInitialized(): void {
+        this.rendererCamera = this.parent?.app.camera;
+        this.transform = this.parent?.getComponent(Transform);
+    }
+
+    public override onUpdate(): void {
+        if (!this.transform || !this.rendererCamera) return
+        this.rendererCamera.position.setX(this.transform.position.x);
+        this.rendererCamera.position.setY(this.transform.position.y);
+        this.rendererCamera.setRotationFromEuler(new THREE.Euler(0, 0, this.transform.rotation * (Math.PI / 180)))
+    }
+} 
 
 // Game Objects
 
@@ -285,8 +309,6 @@ export class GameObject {
             c.onInitialized();
         }
 
-        const boxColliders = this.getComponents(BoxCollider);
-
         const rb = this.getComponent(Rigidbody);
         const tf = this.getComponent(Transform);
         if (!tf) return
@@ -297,9 +319,17 @@ export class GameObject {
             
         })
 
+        const boxColliders = this.getComponents(BoxCollider);
         for (const b of boxColliders) {
             body.createFixture({
                 shape: pl.Box(b.scale.x/64, b.scale.y/64),
+                ...(rb && {density: rb.density, friction: rb.friction})
+            })
+        }
+        const circleColliders = this.getComponents(CircleCollider);
+        for (const c of circleColliders) {
+            body.createFixture({
+                shape: pl.Circle(c.radius / 32),
                 ...(rb && {density: rb.density, friction: rb.friction})
             })
         }
