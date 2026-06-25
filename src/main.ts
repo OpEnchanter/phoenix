@@ -5,7 +5,7 @@ import * as ControllableObjectExample from "./ControllableObjectExample.ts";
 
 const app: Phoenix.App = new Phoenix.App({
     zoom: 1/1,
-    renderScale: new Phoenix.Vector2(720, 480),
+    renderScale: new Phoenix.Vector2(1920, 1080),
     clearColor: 0x5cdbfd,
     timescale: 1
 });

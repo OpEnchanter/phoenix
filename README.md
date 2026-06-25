@@ -206,7 +206,8 @@ Creates a transform with position (0,0) rotation of 0deg and scale of 0x0.
     - [x] Box Collider
     - [x] Circle Collider
     - [x] Camera
-    - [ ] Text Renderer
+    - [x] Canvas Renderer
+    - [x] Text Renderer
 
 - Objects
     - [x] Initialization

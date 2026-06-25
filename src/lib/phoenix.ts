@@ -226,6 +226,109 @@ export class Renderer extends Component {
     }
 }
 
+export class CanvasRenderer extends Component {
+    canvas: HTMLCanvasElement;
+    mesh: THREE.Mesh | undefined = undefined;
+
+    shader: shaderOps;
+    depth: number;
+
+    texture: THREE.Texture;
+
+    transform: Transform | undefined = undefined;
+
+    constructor(canvas: HTMLCanvasElement, depth: number, shaderOverride?: shaderOps) {
+        super();
+        this.canvas = canvas;
+        this.shader = {...defaultShader, ...shaderOverride}
+        this.depth = depth;
+
+        this.texture = new THREE.CanvasTexture(this.canvas);
+        this.texture.minFilter = THREE.NearestFilter;
+        this.texture.magFilter = THREE.NearestFilter;
+    }
+
+    public override onInitialized(): void {
+        this.transform = this.parent?.getComponent(Transform);
+        if (!this.transform) return;
+        this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(this.canvas.width, this.canvas.height), new THREE.ShaderMaterial({
+            glslVersion: THREE.GLSL3,
+            fragmentShader: this.shader.fragmentShader,
+            vertexShader: this.shader.vertexShader,
+            uniforms: {
+                uTex: {value: this.texture},
+                ...this.shader.uniforms
+            },
+            transparent: true
+        }))
+
+        this.parent?.app.renderScene.add(this.mesh);
+    }
+
+    public override onDestroyed(): void {
+        this.texture.dispose();
+        if (!this.mesh) return
+        this.mesh.geometry.dispose();
+        this.parent?.app.renderScene.remove(this.mesh);
+        (this.mesh.material as THREE.Material).dispose();
+    }
+
+    public override onUpdate(): void {
+        if (!this.transform || !this.mesh) return
+        this.mesh.position.set(
+            this.transform.position.x,
+            this.transform.position.y,
+            this.depth
+        );
+
+        this.mesh.rotation.set(
+            0, 0,
+            this.transform.rotation * (Math.PI / 180)
+        );
+    }
+}
+
+type fontOps = {
+    fontSize?: number,
+    fontFamily?: string,
+    fontColor?: string,
+    backgroundColor?: string,
+    padding?: number
+}
+
+const defaultFont: fontOps = {
+    fontSize: 64,
+    fontFamily: "serif",
+    fontColor: "black",
+    backgroundColor: "transparent",
+    padding: 0
+}
+
+export class TextRenderer extends CanvasRenderer {
+    constructor(text: string, fontOverride?: fontOps, depth?: number, shaderOverride?: shaderOps) {
+        let canvas = document.createElement("canvas");
+        let ctx = canvas.getContext("2d");
+
+        const font = {...defaultFont, ...fontOverride};
+
+        ctx!.font = `${font.fontSize}px ${font.fontFamily}`;
+
+        const textMeasurements = ctx!.measureText(text);
+
+        canvas.width = textMeasurements.width + (font.padding! * 2);
+        canvas.height = font.fontSize! + (font.padding! * 2);
+
+        ctx!.font = `${font.fontSize}px ${font.fontFamily}`;
+        
+        ctx!.clearRect(0, 0, canvas.width, canvas.height);
+        ctx!.fillStyle = font.backgroundColor!;
+        ctx!.fillRect(0, 0, canvas.width, canvas.height);
+        ctx!.fillStyle = font.fontColor!;
+        ctx!.fillText(text, font.padding!, font.padding! + font.fontSize!);
+        super(canvas, depth ? depth : 0, shaderOverride);
+    }
+}
+
 export class BoxCollider extends Component {
     scale: Vector2;
 
@@ -529,6 +632,9 @@ export class App {
             Logger.error("Failed to start, rendering context null");
             return;
         }
+
+        this.camera.position.setX(0);
+        this.camera.position.setY(0);
 
         // Register input event handlers
         document.addEventListener("keydown", (e) => {

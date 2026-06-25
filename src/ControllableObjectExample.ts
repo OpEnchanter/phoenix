@@ -59,6 +59,31 @@ export class Scene extends Phoenix.Scene {
             new ControllableComponent()
         )
 
+        app.addObject(app.createObject(
+            new Phoenix.Transform(new Phoenix.Vector2(0, -83), 0, new Phoenix.Vector2(0, 0)),
+            new Phoenix.TextRenderer("In this scene, there is a cube you can control...", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8}, 1)
+        ));
+
+        app.addObject(app.createObject(
+            new Phoenix.Transform(new Phoenix.Vector2(0, -147), 0, new Phoenix.Vector2(0, 0)),
+            new Phoenix.TextRenderer("Hit A to spin the cube left", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8}, 1)
+        ));
+
+        app.addObject(app.createObject(
+            new Phoenix.Transform(new Phoenix.Vector2(0, -209), 0, new Phoenix.Vector2(0, 0)),
+            new Phoenix.TextRenderer("Hit D to spin the cube right", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8}, 1)
+        ));
+
+        app.addObject(app.createObject(
+            new Phoenix.Transform(new Phoenix.Vector2(0, -273), 0, new Phoenix.Vector2(0, 0)),
+            new Phoenix.TextRenderer("Hit W to jump", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8}, 1)
+        ));
+
+        app.addObject(app.createObject(
+            new Phoenix.Transform(new Phoenix.Vector2(0, -337), 0, new Phoenix.Vector2(0, 0)),
+            new Phoenix.TextRenderer("Hit H to return to the first scene", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8}, 1)
+        ));
+
         app.addObject(player)
 
         app.addObject(app.createObject(

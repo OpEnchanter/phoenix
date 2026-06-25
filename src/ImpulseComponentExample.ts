@@ -7,6 +7,8 @@ class TestInteraction extends Phoenix.Component {
 
     exp: number;
 
+    used: boolean = false;
+
     constructor(explosiveness: number) {
         super();
         this.exp = explosiveness;
@@ -19,9 +21,10 @@ class TestInteraction extends Phoenix.Component {
 
     public override onUpdate(): void {
         if (!this.body) {this.body = this.rigidbody!.body; return;}
-        if (this.parent?.app.getKey("w")) {
-            console.log("imp")
+        if (this.parent?.app.getKey("w") && !this.used) {
             this.body.applyLinearImpulse({x:(Math.random()-0.5)*this.exp, y:0}, {x: this.body.getPosition().x, y: this.body.getPosition().y})
+            this.body.applyAngularImpulse((Math.random()-0.5)*this.exp);
+            this.used = true;
         }
     }
 }
@@ -29,17 +32,37 @@ class TestInteraction extends Phoenix.Component {
 export class Scene extends Phoenix.Scene {
     public override onLoad(app: Phoenix.App): void {
         for (let x = 0; x < 5; x++) {
-            for (let y = 0; y < 35; y++) {
+            for (let y = 0; y < 15; y++) {
                 app.addObject(app.createObject(
-                    new Phoenix.Transform(new Phoenix.Vector2(x*26,825-y*25), 0, new Phoenix.Vector2(25, 25)),
+                    new Phoenix.Transform(new Phoenix.Vector2(x*26,355-y*26), 0, new Phoenix.Vector2(25, 25)),
                     new Phoenix.Sprite("assets/brick.png"),
                     new Phoenix.Renderer(0),
                     new Phoenix.BoxCollider(new Phoenix.Vector2(25, 25)),
                     new Phoenix.Rigidbody(0.1, 1, false),
-                    new TestInteraction((Math.abs(x-2.5))/10 + (y**2)/350)
+                    new TestInteraction(((Math.abs(x-2.5))/10 + (y**2)/350 * 10))
                 ))
             }
         }
+
+        app.addObject(app.createObject(
+            new Phoenix.Transform(new Phoenix.Vector2(0, -83), 0, new Phoenix.Vector2(0, 0)),
+            new Phoenix.TextRenderer("Hello! Welcome to this demo!", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8}, 1)
+        ));
+
+        app.addObject(app.createObject(
+            new Phoenix.Transform(new Phoenix.Vector2(0, -147), 0, new Phoenix.Vector2(0, 0)),
+            new Phoenix.TextRenderer("Hit W to apply a random impulse to the objects", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8}, 1)
+        ));
+
+        app.addObject(app.createObject(
+            new Phoenix.Transform(new Phoenix.Vector2(0, -209), 0, new Phoenix.Vector2(0, 0)),
+            new Phoenix.TextRenderer("Hit H to go to the next scene", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8}, 1)
+        ));
+
+        app.addObject(app.createObject(
+            new Phoenix.Transform(new Phoenix.Vector2(0, -273), 0, new Phoenix.Vector2(0, 0)),
+            new Phoenix.TextRenderer("Hit R to reset", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8}, 1)
+        ));
 
         app.addObject(app.createObject(
             new Phoenix.Transform(new Phoenix.Vector2(0,-80), 0, new Phoenix.Vector2(2000, 100)),
