@@ -208,6 +208,7 @@ Creates a transform with position (0,0) rotation of 0deg and scale of 0x0.
     - [x] Camera
     - [x] Canvas Renderer
     - [x] Text Renderer
+    - [ ] Sprite Animator
 
 - Objects
     - [x] Initialization

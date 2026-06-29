@@ -2,6 +2,48 @@ import chalk from "chalk";
 import * as pl from "planck";
 import * as THREE from "three";
 
+const defaultLog = window.console.log;
+window.console.log = (text: string, successValue?: number, namespace?: string, ) => {
+    const sval = successValue ? successValue : 0;
+    let msg = "";
+    switch (sval) {
+        case -1:
+            msg = chalk.bgRedBright(chalk.black("err"))
+            break
+        case 1:
+            msg = chalk.greenBright("success")
+            break
+        default:
+            msg = chalk.blueBright("info")
+            break
+    }
+
+    const txtnumsp = 17 - msg.length;
+    for (let i = 0; i < txtnumsp; i++) { msg = `${msg} `; }
+
+    const stack = new Error().stack;
+
+    if (stack?.includes("three.js")) {
+        namespace = "three.js"
+    } else if (stack?.includes("planck.js")) {
+        namespace = "planck.js"
+    }
+
+    let nstxt = chalk.hex("#efdf9c").bold(namespace);
+    const numsp = 40 - nstxt.length!;
+    for (let i = 0; i < numsp; i++) { nstxt += " "; }
+
+    defaultLog(`${nstxt} ${chalk.italic(msg)} ${text}`);
+}
+
+window.console.error = (text: string) => {
+    window.console.log(text, -1);
+}
+
+window.console.info = (text: string) => {
+    window.console.log(text, 0)
+}
+
 // Shader variables
 type shaderOps = {
     vertexShader: string,
@@ -90,15 +132,15 @@ export class Vector2 {
 
 export class Logger {
     public static error(m: string) {
-        console.log(`[${chalk.red("Error")}] ${m}`)
+        console.log(m, -1, "phoenix")
     }
 
     public static info(m: string) {
-        console.log(`[${chalk.blue("Info")}] ${m}`)
+        console.log(m, 0, "phoenix")
     }
 
     public static success(m: string) {
-        console.log(`[${chalk.blue("Success")}] ${m}`)
+        console.log(m, 1, "phoenix")
     }
 }
 
@@ -329,6 +371,11 @@ export class TextRenderer extends CanvasRenderer {
     }
 }
 
+export type Animation = {
+    frames: Array<string>
+    name: string
+};
+
 export class BoxCollider extends Component {
     scale: Vector2;
 
@@ -548,6 +595,7 @@ export class App {
 
         // Physics
         this.plWorld = new pl.World({gravity: {x:0, y:-10}});
+        Logger.info("Physics world loaded")
 
 
         // Rendering
@@ -557,11 +605,14 @@ export class App {
             minFilter: THREE.NearestFilter,
             colorSpace: THREE.LinearSRGBColorSpace
         })
+        Logger.info("Render target loaded")
 
         // Rendering objects
         this.renderer = new THREE.WebGLRenderer({ antialias: false });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(this.renderer.domElement);
+
+        Logger.info("Renderer loaded")
 
         this.renderScene = new THREE.Scene();
 
@@ -599,8 +650,9 @@ export class App {
         window.addEventListener("resize", () => {
             this.resize();
         })
+        Logger.info("Resize handler loaded")
 
-        Logger.success("Application initialized successfully")
+        Logger.success("Loading success")
     }
 
     private resize() {
@@ -673,7 +725,7 @@ export class App {
     }
 
     public stop() {
-        if (this.eventLoopIntervalID == null) {
+        if (this.isTicking == false) {
             Logger.error("Failed to stop, application not running")
             return;
         }
@@ -738,7 +790,7 @@ export class App {
             return
         }
 
-        Logger.success(`Loading scene, ${name}`)
+        Logger.info(`Loading scene ${name}`)
 
         this.curScene = name;
 
