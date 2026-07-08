@@ -59,6 +59,14 @@ export class Scene extends Phoenix.Scene {
             new ControllableComponent()
         )
 
+        app.addObject(app.createObject(
+            new Phoenix.Transform(new Phoenix.Vector2(48, 0), 0, new Phoenix.Vector2(32, 32)),
+            new Phoenix.AnimatedSprite(["assets/brick.png", "assets/null.png"]),
+            new Phoenix.Renderer(0),
+            new Phoenix.BoxCollider(new Phoenix.Vector2(32, 32)),
+            new Phoenix.Rigidbody(1, 1, false)
+        ))
+
         const t1 = new Phoenix.TextSprite("In this scene, there is a cube you can control...", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8});
         app.addObject(app.createObject(
             new Phoenix.Transform(new Phoenix.Vector2(0, -83), 0, new Phoenix.Vector2(t1.texture!.width, t1.texture!.height)),

@@ -21,13 +21,15 @@ window.console.log = (text: string, successValue?: number, namespace?: string, )
     const txtnumsp = 17 - msg.length;
     for (let i = 0; i < txtnumsp; i++) { msg = `${msg} `; }
 
-    const stack = new Error().stack;
-
-    if (stack?.includes("three.js")) {
-        namespace = "three.js"
-    } else if (stack?.includes("planck.js")) {
-        namespace = "planck.js"
+    if (!namespace) {
+        const stack = new Error().stack;
+        if (stack?.includes("three.js")) {
+            namespace = "three.js"
+        } else if (stack?.includes("planck.js")) {
+            namespace = "planck.js"
+        }
     }
+    
 
     let nstxt = chalk.hex("#efdf9c").bold(namespace);
     const numsp = 40 - nstxt.length!;
@@ -205,6 +207,93 @@ export class Sprite extends Component {
     }
 }
 
+export class CanvasSprite extends Sprite {
+    constructor (canvas: HTMLCanvasElement) {
+        super("CANVAS");
+
+        this.texture = new THREE.CanvasTexture(canvas);
+        this.texture.minFilter = THREE.NearestFilter;
+        this.texture.magFilter = THREE.NearestFilter;
+    }
+}
+
+type fontOps = {
+    fontSize?: number,
+    fontFamily?: string,
+    fontColor?: string,
+    backgroundColor?: string,
+    padding?: number
+}
+
+const defaultFont: fontOps = {
+    fontSize: 64,
+    fontFamily: "serif",
+    fontColor: "black",
+    backgroundColor: "transparent",
+    padding: 0
+}
+
+export class TextSprite extends Sprite {
+    private canvas: HTMLCanvasElement;
+
+    constructor (text: string, fontOverride?: fontOps) {
+        super("CANVAS");
+        let canvas = document.createElement("canvas");
+        let ctx = canvas.getContext("2d");
+
+        const font = {...defaultFont, ...fontOverride};
+
+        ctx!.font = `${font.fontSize}px ${font.fontFamily}`;
+
+        const textMeasurements = ctx!.measureText(text);
+
+        canvas.width = textMeasurements.width + (font.padding! * 2);
+        canvas.height = font.fontSize! + (font.padding! * 2);
+
+        ctx!.font = `${font.fontSize}px ${font.fontFamily}`;
+        
+        ctx!.clearRect(0, 0, canvas.width, canvas.height);
+        ctx!.fillStyle = font.backgroundColor!;
+        ctx!.fillRect(0, 0, canvas.width, canvas.height);
+        ctx!.fillStyle = font.fontColor!;
+        ctx!.fillText(text, font.padding!, font.padding! + font.fontSize!);
+
+        this.canvas = canvas;
+        
+        this.texture = new THREE.CanvasTexture(this.canvas);
+        this.texture.minFilter = THREE.NearestFilter;
+        this.texture.magFilter = THREE.NearestFilter;
+    }
+}
+
+export type Animation = {
+    frames: Array<string>
+    name: string
+};
+
+export class AnimatedSprite extends Sprite {
+    frameTextures: Array<THREE.Texture> = [];
+    t: number = 0;
+    rate: number = 60;
+
+    constructor(frames: Array<string>, rate?: number) {
+        if (frames.length == 0) { super("CANVAS"); return; }
+        super(frames[0]!);
+
+        this.rate = rate ? rate : 15
+        
+        for (const f of frames) {
+            this.frameTextures.push(this.loadTexture(f));
+        }
+    }
+
+    override onUpdate () {
+        // Update sprite
+        this.texture = this.frameTextures[Math.floor(this.t / this.rate)  % this.frameTextures.length];
+        this.t++;
+    }
+}
+
 export class Renderer extends Component {
     transform: Transform | undefined = undefined;
     sprite: Sprite | undefined = undefined;
@@ -280,76 +369,17 @@ export class Renderer extends Component {
             this.depth
         )
 
+        const mat = (this.mesh.material as THREE.ShaderMaterial);
+        if (this.sprite?.texture !== mat.uniforms.uTex!.value) {
+            mat.uniforms.uTex!.value = this.sprite!.texture
+        }
+
         this.mesh.rotation.set(
             0, 0,
             this.transform.rotation * (Math.PI / 180)
         )
     }
 }
-
-export class CanvasSprite extends Sprite {
-    constructor (canvas: HTMLCanvasElement) {
-        super("CANVAS");
-
-        this.texture = new THREE.CanvasTexture(canvas);
-        this.texture.minFilter = THREE.NearestFilter;
-        this.texture.magFilter = THREE.NearestFilter;
-    }
-}
-
-type fontOps = {
-    fontSize?: number,
-    fontFamily?: string,
-    fontColor?: string,
-    backgroundColor?: string,
-    padding?: number
-}
-
-const defaultFont: fontOps = {
-    fontSize: 64,
-    fontFamily: "serif",
-    fontColor: "black",
-    backgroundColor: "transparent",
-    padding: 0
-}
-
-export class TextSprite extends Sprite {
-    private canvas: HTMLCanvasElement;
-
-    constructor (text: string, fontOverride?: fontOps) {
-        super("CANVAS");
-        let canvas = document.createElement("canvas");
-        let ctx = canvas.getContext("2d");
-
-        const font = {...defaultFont, ...fontOverride};
-
-        ctx!.font = `${font.fontSize}px ${font.fontFamily}`;
-
-        const textMeasurements = ctx!.measureText(text);
-
-        canvas.width = textMeasurements.width + (font.padding! * 2);
-        canvas.height = font.fontSize! + (font.padding! * 2);
-
-        ctx!.font = `${font.fontSize}px ${font.fontFamily}`;
-        
-        ctx!.clearRect(0, 0, canvas.width, canvas.height);
-        ctx!.fillStyle = font.backgroundColor!;
-        ctx!.fillRect(0, 0, canvas.width, canvas.height);
-        ctx!.fillStyle = font.fontColor!;
-        ctx!.fillText(text, font.padding!, font.padding! + font.fontSize!);
-
-        this.canvas = canvas;
-        
-        this.texture = new THREE.CanvasTexture(this.canvas);
-        this.texture.minFilter = THREE.NearestFilter;
-        this.texture.magFilter = THREE.NearestFilter;
-    }
-}
-
-export type Animation = {
-    frames: Array<string>
-    name: string
-};
 
 export class BoxCollider extends Component {
     scale: Vector2;
