@@ -12,9 +12,11 @@ export class Scene extends Phoenix.Scene {
             ))
         }
 
+        const t1 = new Phoenix.TextSprite("Hit H to go to the next scene", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8});
         app.addObject(app.createObject(
-            new Phoenix.Transform(new Phoenix.Vector2(0, -83), 0, new Phoenix.Vector2(0, 0)),
-            new Phoenix.TextRenderer("Hit H to go to the next scene", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8}, 1)
+            new Phoenix.Transform(new Phoenix.Vector2(0, -83), 0, new Phoenix.Vector2(t1.texture!.width, t1.texture!.height)),
+            t1,
+            new Phoenix.Renderer(1),
         ));
 
         app.addObject(app.createObject(

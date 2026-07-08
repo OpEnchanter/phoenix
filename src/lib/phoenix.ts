@@ -188,9 +188,20 @@ export class Transform extends Component {
 export class Sprite extends Component {
     src: string;
 
+    texture: THREE.Texture | undefined = undefined;
+
+    loadTexture(url: string): THREE.Texture {
+        return new THREE.TextureLoader().load(url, (tex) => {
+            tex.colorSpace = THREE.SRGBColorSpace;
+            tex.magFilter = THREE.NearestFilter;
+            tex.minFilter = THREE.NearestFilter;
+        })
+    }
+
     constructor (src: string) {
         super()
         this.src = src;
+        if (src != "CANVAS") this.texture = this.loadTexture(src);
     }
 }
 
@@ -210,22 +221,30 @@ export class Renderer extends Component {
         if (shaderOverride) this.shader = shaderOverride;
     }
 
-    loadTexture(url: string): THREE.Texture {
-        return new THREE.TextureLoader().load(url, (tex) => {
-            tex.colorSpace = THREE.SRGBColorSpace;
-            tex.magFilter = THREE.NearestFilter;
-            tex.minFilter = THREE.NearestFilter;
-        })
-    }
-
     public override onInitialized(): void {
         if (!this.parent) return
         this.transform = this.parent.getComponent(Transform);
-        this.sprite = this.parent.getComponent(Sprite);
+
+        // Search for the sprite component on the parent object
+        // Search first for Sprite and then for CanvasSprite and TextSprite
+        this.sprite = undefined;
+        switch (true) {
+            case (this.parent.getComponent(TextSprite) !== undefined):
+                this.sprite = this.parent.getComponent(TextSprite)
+                break;
+            case (this.parent.getComponent(CanvasSprite) !== undefined):
+                this.sprite = this.parent.getComponent(CanvasSprite)
+                break;
+            case (this.parent.getComponent(Sprite) !== undefined):
+                this.sprite = this.parent.getComponent(Sprite)
+                break;
+        }
 
         if (!this.sprite) return
 
-        const texture = this.loadTexture(this.sprite.src);
+        if (this.sprite instanceof TextSprite) console.log(this.sprite.texture?.height)
+
+        const texture = this.sprite.texture;
 
         const geo = new THREE.PlaneGeometry(this.transform?.scale.x, this.transform?.scale.y)
 
@@ -265,6 +284,16 @@ export class Renderer extends Component {
             0, 0,
             this.transform.rotation * (Math.PI / 180)
         )
+    }
+}
+
+export class CanvasSprite extends Sprite {
+    constructor (canvas: HTMLCanvasElement) {
+        super("CANVAS");
+
+        this.texture = new THREE.CanvasTexture(canvas);
+        this.texture.minFilter = THREE.NearestFilter;
+        this.texture.magFilter = THREE.NearestFilter;
     }
 }
 
@@ -344,6 +373,39 @@ const defaultFont: fontOps = {
     fontColor: "black",
     backgroundColor: "transparent",
     padding: 0
+}
+
+export class TextSprite extends Sprite {
+    private canvas: HTMLCanvasElement;
+
+    constructor (text: string, fontOverride?: fontOps) {
+        super("CANVAS");
+        let canvas = document.createElement("canvas");
+        let ctx = canvas.getContext("2d");
+
+        const font = {...defaultFont, ...fontOverride};
+
+        ctx!.font = `${font.fontSize}px ${font.fontFamily}`;
+
+        const textMeasurements = ctx!.measureText(text);
+
+        canvas.width = textMeasurements.width + (font.padding! * 2);
+        canvas.height = font.fontSize! + (font.padding! * 2);
+
+        ctx!.font = `${font.fontSize}px ${font.fontFamily}`;
+        
+        ctx!.clearRect(0, 0, canvas.width, canvas.height);
+        ctx!.fillStyle = font.backgroundColor!;
+        ctx!.fillRect(0, 0, canvas.width, canvas.height);
+        ctx!.fillStyle = font.fontColor!;
+        ctx!.fillText(text, font.padding!, font.padding! + font.fontSize!);
+
+        this.canvas = canvas;
+        
+        this.texture = new THREE.CanvasTexture(this.canvas);
+        this.texture.minFilter = THREE.NearestFilter;
+        this.texture.magFilter = THREE.NearestFilter;
+    }
 }
 
 export class TextRenderer extends CanvasRenderer {

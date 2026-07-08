@@ -44,24 +44,32 @@ export class Scene extends Phoenix.Scene {
             }
         }
 
+        const t1 = new Phoenix.TextSprite("Hello! Welcome to this demo!", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8});
         app.addObject(app.createObject(
-            new Phoenix.Transform(new Phoenix.Vector2(0, -83), 0, new Phoenix.Vector2(0, 0)),
-            new Phoenix.TextRenderer("Hello! Welcome to this demo!", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8}, 1)
+            new Phoenix.Transform(new Phoenix.Vector2(0, -83), 0, new Phoenix.Vector2(t1.texture!.width, t1.texture!.height)),
+            t1,
+            new Phoenix.Renderer(1)
         ));
 
+        const t2 = new Phoenix.TextSprite("Hit W to apply a random impulse to the objects", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8});
         app.addObject(app.createObject(
-            new Phoenix.Transform(new Phoenix.Vector2(0, -147), 0, new Phoenix.Vector2(0, 0)),
-            new Phoenix.TextRenderer("Hit W to apply a random impulse to the objects", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8}, 1)
+            new Phoenix.Transform(new Phoenix.Vector2(0, -147), 0, new Phoenix.Vector2(t2.texture!.width, t2.texture!.height)),
+            t2,
+            new Phoenix.Renderer(1)
         ));
 
+        const t3 = new Phoenix.TextSprite("Hit H to go to the next scene", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8});
         app.addObject(app.createObject(
-            new Phoenix.Transform(new Phoenix.Vector2(0, -209), 0, new Phoenix.Vector2(0, 0)),
-            new Phoenix.TextRenderer("Hit H to go to the next scene", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8}, 1)
+            new Phoenix.Transform(new Phoenix.Vector2(0, -209), 0, new Phoenix.Vector2(t3.texture!.width, t3.texture!.height)),
+            t3,
+            new Phoenix.Renderer(1),
         ));
 
+        const t4 = new Phoenix.TextSprite("Hit R to reset", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8});
         app.addObject(app.createObject(
-            new Phoenix.Transform(new Phoenix.Vector2(0, -273), 0, new Phoenix.Vector2(0, 0)),
-            new Phoenix.TextRenderer("Hit R to reset", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8}, 1)
+            new Phoenix.Transform(new Phoenix.Vector2(0, -273), 0, new Phoenix.Vector2(t4.texture!.width, t4.texture!.height)),
+            t4,
+            new Phoenix.Renderer(1),
         ));
 
         app.addObject(app.createObject(

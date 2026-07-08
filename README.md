@@ -1,6 +1,8 @@
 # phoenix
 A 2D game framework made for browser-based video games designed to mimic some design paradigms of the Unity game engine. Using Bun + Typescript and bundled with Vite. Uses the [Planck.js](https://piqnt.github.io/planck.js/docs/body.html) physics engine and [THREE.js](https://threejs.org/) for rendering.
 
+The demos for this project are relatively simple, just showing off the features of the engine. Although with more time, this could be used to make a full game.
+
 ## Usage
 The entrypoint into the application must be loaded in a HTML document.
 In this example, the HTML provides a canvas element, styled to fit the screen properly and loads the Typescript entrypoint.

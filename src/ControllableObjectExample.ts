@@ -59,29 +59,39 @@ export class Scene extends Phoenix.Scene {
             new ControllableComponent()
         )
 
+        const t1 = new Phoenix.TextSprite("In this scene, there is a cube you can control...", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8});
         app.addObject(app.createObject(
-            new Phoenix.Transform(new Phoenix.Vector2(0, -83), 0, new Phoenix.Vector2(0, 0)),
-            new Phoenix.TextRenderer("In this scene, there is a cube you can control...", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8}, 1)
+            new Phoenix.Transform(new Phoenix.Vector2(0, -83), 0, new Phoenix.Vector2(t1.texture!.width, t1.texture!.height)),
+            t1,
+            new Phoenix.Renderer(1)
         ));
 
+        const t2 = new Phoenix.TextSprite("Hit A to spin the cube left", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8});
         app.addObject(app.createObject(
-            new Phoenix.Transform(new Phoenix.Vector2(0, -147), 0, new Phoenix.Vector2(0, 0)),
-            new Phoenix.TextRenderer("Hit A to spin the cube left", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8}, 1)
+            new Phoenix.Transform(new Phoenix.Vector2(0, -147), 0, new Phoenix.Vector2(t2.texture!.width, t2.texture!.height)),
+            t2,
+            new Phoenix.Renderer(1)
         ));
 
+        const t3 = new Phoenix.TextSprite("Hit D to spin the cube right", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8});
         app.addObject(app.createObject(
-            new Phoenix.Transform(new Phoenix.Vector2(0, -209), 0, new Phoenix.Vector2(0, 0)),
-            new Phoenix.TextRenderer("Hit D to spin the cube right", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8}, 1)
+            new Phoenix.Transform(new Phoenix.Vector2(0, -209), 0, new Phoenix.Vector2(t3.texture!.width, t3.texture!.height)),
+            t3,
+            new Phoenix.Renderer(1)
         ));
 
+        const t4 = new Phoenix.TextSprite("Hit W to jump", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8});        
         app.addObject(app.createObject(
-            new Phoenix.Transform(new Phoenix.Vector2(0, -273), 0, new Phoenix.Vector2(0, 0)),
-            new Phoenix.TextRenderer("Hit W to jump", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8}, 1)
+            new Phoenix.Transform(new Phoenix.Vector2(0, -273), 0, new Phoenix.Vector2(t4.texture!.width, t4.texture!.height)),
+            t4,
+            new Phoenix.Renderer(1)
         ));
 
+        const t5 = new Phoenix.TextSprite("Hit H to return to the first scene", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8});    
         app.addObject(app.createObject(
-            new Phoenix.Transform(new Phoenix.Vector2(0, -337), 0, new Phoenix.Vector2(0, 0)),
-            new Phoenix.TextRenderer("Hit H to return to the first scene", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8}, 1)
+            new Phoenix.Transform(new Phoenix.Vector2(0, -337), 0, new Phoenix.Vector2(t5.texture!.width, t5.texture!.height)),
+            t5,
+            new Phoenix.Renderer(1)
         ));
 
         app.addObject(player)
