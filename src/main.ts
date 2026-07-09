@@ -10,8 +10,9 @@ const LitShader = `
 
     uniform sampler2D uTex;
     uniform sampler2D uDepth;
-    uniform vec2 uLightPos;
-    uniform vec2 uLightScale;
+    uniform vec2[2] uLightPositions;
+    uniform vec2[2] uLightScales;
+    uniform vec3[2] uLightColors;
     uniform float t;
 
     out vec4 fragColor;
@@ -22,27 +23,56 @@ const LitShader = `
 
     void main() {
         vec4 p1 = texture(uTex, fragTexCoord);
-        vec2 lightRay = uLightPos - fragTexCoord;
-        vec2 lightRaySegment = vec2(lightRay.x / 1024.0, lightRay.y / 1024.0);
-        bool isOccluded = false;
 
-        for (int i = 0; i < 1024; i++) {
-            if (texture(uDepth, fragTexCoord + vec2(lightRaySegment.x * float(i), lightRaySegment.y * float(i))).r < 0.1) {
-                isOccluded = true;
-                break;
+        for (int l = 0; l < 2; l++) {
+            vec2 uLightPos = uLightPositions[l];
+            vec2 uLightScale = uLightScales[l];
+
+            vec2 lightRay = uLightPos - fragTexCoord;
+            float rStepRes = max(2048.0, 64.0 * (1.0 / length(lightRay)));
+            vec2 lightRaySegment = vec2(lightRay.x / 256.0, lightRay.y / 256.0);
+            bool isOccluded = false;
+
+            for (int i = 0; i < 1024; i++) {
+                vec2 marchedLine = vec2(lightRaySegment.x * float(i), lightRaySegment.y * float(i));
+                if (texture(uDepth, fragTexCoord + marchedLine).r < 0.1) {
+                    isOccluded = true;
+                    break;
+                }
+
+                if (length(marchedLine) > length(lightRay)) {
+                    break;
+                }
+
+                if (length(marchedLine) < 0.0) {
+                    break;
+                }
             }
-        }
 
-        if (!isOccluded) {
-            float lightAffectAmount = 1.0 - min(1.0, (length(lightRay)*5.0));
-            p1 += vec4(lightAffectAmount, lightAffectAmount, lightAffectAmount, 0);
+            if (!isOccluded) {
+                float lightAffectAmount = 1.0 - clamp((sqrt(pow(lightRay.x / uLightScale.x,2.0) + pow(lightRay.y / uLightScale.y,2.0))*5.0), 0.4, 1.0);
+                p1 += vec4(lightAffectAmount * uLightColors[l].x, lightAffectAmount * uLightColors[l].y, lightAffectAmount * uLightColors[l].z, 0);
+            }
         }
         
         fragColor = linearToSRGB(p1);
     }
 `
 
-let lightPos = [-128, 128]
+let lightPositions = [
+    new THREE.Vector2(-128, 128), 
+    new THREE.Vector2(64, 128)
+]
+
+let lightScales = [
+    new THREE.Vector2(512, 512), 
+    new THREE.Vector2(512, 512)
+]
+
+let lightColors = [
+    new THREE.Vector3(1,0.3,0), 
+    new THREE.Vector3(0,1,0.3)
+]
 const rScale = new Phoenix.Vector2(1920, 1080)
 
 const app: Phoenix.App = new Phoenix.App({
@@ -54,8 +84,9 @@ const app: Phoenix.App = new Phoenix.App({
         vertexShader: Phoenix.DefaultVertexShader,
         fragmentShader: LitShader,
         uniforms: {
-            uLightPos: { value: lightPos },
-            uLightScale: { value: [0.1, 0.1] }
+            uLightPositions: { value: lightPositions },
+            uLightScales: { value: lightScales },
+            uLightColors: { value: lightColors }
         }
     }
 });
@@ -71,13 +102,27 @@ let cur = 0;
 let max = 2;
 
 app.addFrameIntervalCallback(() => {
-    const p = new THREE.Vector3(lightPos[0], lightPos[1], 0);
-    p.project(app.camera);
+    let lps = []
+    for (const lightPos of lightPositions) {
+        const p = new THREE.Vector3(lightPos.x, lightPos.y, 0);
+        p.project(app.camera);
 
-    const x = (p.x + 1) / 2
-    const y = (p.y + 1) / 2
+        const x = (p.x + 1) / 2
+        const y = (p.y + 1) / 2
+        lps.push(new THREE.Vector2(x, y))
+    }
 
-    app.screenSpaceShader.uniforms.uLightPos!.value = [x, y]
+    app.screenSpaceShader.uniforms.uLightPositions!.value = lps
+
+    let scls = []
+    for (const lightScale of lightScales) {
+        const x = lightScale.x! / rScale.x
+        const y = lightScale.y! / rScale.y
+
+        scls.push(new THREE.Vector2(x, y))
+    }
+
+    app.screenSpaceShader.uniforms.uLightScales!.value = scls
 })
 
 document.addEventListener("keydown", (e) => {
