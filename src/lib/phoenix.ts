@@ -53,7 +53,7 @@ type shaderOps = {
     uniforms: Record<string, {value: any}>
 }
 
-const vshad = `
+export const DefaultVertexShader = `
     out vec3 fragPosition;
     out vec2 fragTexCoord;
     out vec3 fragNormal;
@@ -67,7 +67,7 @@ const vshad = `
     }
 `
 
-const fshad = `
+export const DefaultFragmentShader = `
     in vec2 fragTexCoord;
 
     uniform sampler2D uTex;
@@ -81,7 +81,7 @@ const fshad = `
     }
 `
 
-const screenfshad = `
+export const ScreenspaceDefaultFragmentShader = `
     in vec2 fragTexCoord;
 
     uniform sampler2D uTex;
@@ -95,19 +95,20 @@ const screenfshad = `
 
     void main() {
         vec4 p1 = texture(uTex, fragTexCoord);
+        
         fragColor = linearToSRGB(p1);
     }
 `
 
 const defaultShader: shaderOps = {
-    vertexShader: vshad,
-    fragmentShader: fshad,
+    vertexShader: DefaultVertexShader,
+    fragmentShader: DefaultFragmentShader,
     uniforms: {}
 }
 
 const defaultScreenShader: shaderOps = {
-    vertexShader: vshad,
-    fragmentShader: screenfshad,
+    vertexShader: DefaultVertexShader,
+    fragmentShader: ScreenspaceDefaultFragmentShader,
     uniforms: {}
 }
 
@@ -314,20 +315,8 @@ export class Renderer extends Component {
         if (!this.parent) return
         this.transform = this.parent.getComponent(Transform);
 
-        // Search for the sprite component on the parent object
-        // Search first for Sprite and then for CanvasSprite and TextSprite
-        this.sprite = undefined;
-        switch (true) {
-            case (this.parent.getComponent(TextSprite) !== undefined):
-                this.sprite = this.parent.getComponent(TextSprite)
-                break;
-            case (this.parent.getComponent(CanvasSprite) !== undefined):
-                this.sprite = this.parent.getComponent(CanvasSprite)
-                break;
-            case (this.parent.getComponent(Sprite) !== undefined):
-                this.sprite = this.parent.getComponent(Sprite)
-                break;
-        }
+        // Search for any component derived from sprite
+        this.sprite = this.sprite = this.parent.getComponent(Sprite);
 
         if (!this.sprite) return
 
@@ -574,6 +563,7 @@ export class App {
 
     screenSpaceScene: THREE.Scene;
     screenSpaceCamera: THREE.OrthographicCamera;
+    screenSpaceShader: THREE.ShaderMaterial;
 
     renderTarget: THREE.WebGLRenderTarget;
 
@@ -585,6 +575,8 @@ export class App {
 
     private keys: Record<string, boolean> = {};
     private mousePos = new Vector2(0, 0);
+
+    frameIntervalCallbacks: Array<() => void> = [];
 
     constructor (args: ApplicationArguments) {
 
@@ -610,6 +602,8 @@ export class App {
             minFilter: THREE.NearestFilter,
             colorSpace: THREE.LinearSRGBColorSpace
         })
+        this.renderTarget.depthTexture = new THREE.DepthTexture(LOW_W, LOW_H);
+        this.renderTarget.depthTexture.type = THREE.UnsignedShortType;
         Logger.info("Render target loaded")
 
         // Rendering objects
@@ -635,19 +629,22 @@ export class App {
 
         this.screenSpaceScene = new THREE.Scene;
 
-        this.screenSpaceScene.add(new THREE.Mesh(
-            new THREE.PlaneGeometry(2, 2),
-
-            // Screen-space shader injection
-            new THREE.ShaderMaterial({ 
+        this.screenSpaceShader = new THREE.ShaderMaterial({ 
                 glslVersion: THREE.GLSL3,
                 uniforms: {
                     uTex: { value: this.renderTarget.texture },
+                    uDepth: { value: this.renderTarget.depthTexture },
                     ...this.args.shaderOverride?.uniforms
                 },
                 vertexShader: this.args.shaderOverride ? this.args.shaderOverride.vertexShader : defaultShader.vertexShader,
                 fragmentShader: this.args.shaderOverride ? this.args.shaderOverride.fragmentShader : defaultShader.fragmentShader
             })
+
+        this.screenSpaceScene.add(new THREE.Mesh(
+            new THREE.PlaneGeometry(2, 2),
+
+            // Screen-space shader injection
+            this.screenSpaceShader
         ))
 
         // Window resize handler
@@ -718,6 +715,10 @@ export class App {
             this.plWorld.step(this.deltaTime / 1000, 10, 6);
             this.update();
 
+            for (const c of this.frameIntervalCallbacks) {
+                c();
+            }
+
             this.renderer.setRenderTarget(this.renderTarget);
             this.renderer.render(this.renderScene, this.camera);
             
@@ -727,6 +728,10 @@ export class App {
             this.deltaTime = (Date.now() - this.oldTimestamp) * this.args.timescale!;
             this.oldTimestamp = Date.now();
         })
+    }
+
+    public addFrameIntervalCallback(c: () => void) {
+        this.frameIntervalCallbacks.push(c);
     }
 
     public stop() {
