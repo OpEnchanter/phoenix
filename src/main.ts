@@ -8,11 +8,13 @@ import * as THREE from "three";
 const LitShader = `
     in vec2 fragTexCoord;
 
+    const int MAX_LIGHTS = 2;
     uniform sampler2D uTex;
     uniform sampler2D uDepth;
-    uniform vec2[2] uLightPositions;
-    uniform vec2[2] uLightScales;
-    uniform vec3[2] uLightColors;
+    uniform int uNumLights;
+    uniform vec2 uLightPositions[MAX_LIGHTS];
+    uniform vec2 uLightScales[MAX_LIGHTS];
+    uniform vec3 uLightColors[MAX_LIGHTS];
     uniform float t;
 
     out vec4 fragColor;
@@ -22,38 +24,47 @@ const LitShader = `
     }
 
     void main() {
-        vec4 p1 = texture(uTex, fragTexCoord);
+        vec4 p1 = vec4(0.0, 0.0, 0.0, 1.0);
 
-        for (int l = 0; l < 2; l++) {
+        vec2 texSize = vec2(textureSize(uDepth, 0));
+        vec2 texel = 1.0 / texSize;
+
+        for (int l = 0; l < uNumLights; l++) {
             vec2 uLightPos = uLightPositions[l];
             vec2 uLightScale = uLightScales[l];
 
             vec2 lightRay = uLightPos - fragTexCoord;
-            float rStepRes = max(2048.0, 64.0 * (1.0 / length(lightRay)));
-            vec2 lightRaySegment = vec2(lightRay.x / 256.0, lightRay.y / 256.0);
-            bool isOccluded = false;
+            vec2 rayPx = lightRay * texSize;
+            float rayLenPx = length(rayPx);
+            vec2 dirPx = rayPx / max(rayLenPx, 1e-6);
 
-            for (int i = 0; i < 1024; i++) {
-                vec2 marchedLine = vec2(lightRaySegment.x * float(i), lightRaySegment.y * float(i));
-                if (texture(uDepth, fragTexCoord + marchedLine).r < 0.1) {
-                    isOccluded = true;
-                    break;
-                }
+            const float STEP_PX = 1.0;
+            const float ABSORB = 0.1;
 
-                if (length(marchedLine) > length(lightRay)) {
-                    break;
-                }
+            float occlusionFactor = 1.0;
 
-                if (length(marchedLine) < 0.0) {
-                    break;
+            for (int i = 0; i < 512; i++) {
+                float marchedDist = float(i) * STEP_PX;
+                if (marchedDist >= rayLenPx) break;
+
+                vec2 marchedLinePx = dirPx * marchedDist;
+                vec2 marchedLine = marchedLinePx * texel;
+                
+                vec2 uv = fragTexCoord + marchedLine;
+                if (texture(uDepth, uv).r <= 0.1) {
+                    occlusionFactor -= ABSORB;
+                    if (occlusionFactor <= 0.0) { occlusionFactor = 0.0; break; } 
                 }
             }
 
-            if (!isOccluded) {
-                float lightAffectAmount = 1.0 - clamp((sqrt(pow(lightRay.x / uLightScale.x,2.0) + pow(lightRay.y / uLightScale.y,2.0))*5.0), 0.4, 1.0);
-                p1 += vec4(lightAffectAmount * uLightColors[l].x, lightAffectAmount * uLightColors[l].y, lightAffectAmount * uLightColors[l].z, 0);
-            }
+            float d = length(lightRay / uLightScale);
+            float lightAffectAmount = 1.0 - clamp(d, 0.5, 1.0);
+            p1.rgb += occlusionFactor * lightAffectAmount * uLightColors[l];
         }
+
+        const float UNLIT_BRIGHTNESS = 1.0;
+
+        p1 += texture(uTex, fragTexCoord) * UNLIT_BRIGHTNESS;
         
         fragColor = linearToSRGB(p1);
     }
@@ -70,9 +81,10 @@ let lightScales = [
 ]
 
 let lightColors = [
-    new THREE.Vector3(1,0.3,0), 
-    new THREE.Vector3(0,1,0.3)
+    new THREE.Vector3(0.9,0.9,0.9), 
+    new THREE.Vector3(1.0,0.0,0)
 ]
+
 const rScale = new Phoenix.Vector2(1920, 1080)
 
 const app: Phoenix.App = new Phoenix.App({
@@ -84,22 +96,13 @@ const app: Phoenix.App = new Phoenix.App({
         vertexShader: Phoenix.DefaultVertexShader,
         fragmentShader: LitShader,
         uniforms: {
+            uNumLights: { value: 2 },
             uLightPositions: { value: lightPositions },
             uLightScales: { value: lightScales },
             uLightColors: { value: lightColors }
         }
     }
 });
-
-
-app.addScene("0", new ImpulseComponentExample.Scene())
-app.addScene("1", new ManyObjectsExample.Scene())
-app.addScene("2", new ControllableObjectExample.Scene())
-
-app.loadScene("0")
-
-let cur = 0;
-let max = 2;
 
 app.addFrameIntervalCallback(() => {
     let lps = []
@@ -124,6 +127,16 @@ app.addFrameIntervalCallback(() => {
 
     app.screenSpaceShader.uniforms.uLightScales!.value = scls
 })
+
+
+app.addScene("0", new ImpulseComponentExample.Scene())
+app.addScene("1", new ManyObjectsExample.Scene())
+app.addScene("2", new ControllableObjectExample.Scene())
+
+app.loadScene("0")
+
+let cur = 0;
+let max = 2;
 
 document.addEventListener("keydown", (e) => {
     if (e.key.toLowerCase() == "h") {
