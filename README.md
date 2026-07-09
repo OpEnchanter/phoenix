@@ -115,15 +115,29 @@ Without components, objects do not render, have a sprite, or even have a positio
 
 **Built-in Components**
 
-`Phoenix.Transform(position: Vector2, rotation: number, scale: Vector2)` - Stores the position, rotation and scale of objects.
+**Basic Components:**
 
-`Phoenix.Sprite(src: string)` - Stores a texture used for the object by the renderer.
+- `Phoenix.Transform(position: Vector2, rotation: number, scale: Vector2)` - Stores the position, rotation and scale of objects.
 
-`Phoenix.Renderer(depth: number)` - Stores the object's rendering depth and adds the texture retrieved from the first `Sprite` on the object along with the transformation from the first `Transform` on the object and the depth stored to the app's rendering buffer. A smaller depth value causes the texture to render later, appearing in front of others.
+- `Phoenix.Renderer(depth: number)` - Stores the object's rendering depth and adds the texture retrieved from the first `Sprite` on the object along with the transformation from the first `Transform` on the object and the depth stored to the app's rendering buffer. A smaller depth value causes the texture to render later, appearing in front of others.
 
-`Phoenix.BoxCollider(scale: Vector2)` - A simple rectangular collider. Physics objects collide with this but do not have any effect on it's position or rotation. A `Rigidbody` with `isStatic = true` will allow for more properties such as friction to be added.
+- `Phoenix.Rigidbody(density: number, friction: number, isStatic: boolean)` - Allows physics and other physical properties such as friction to be added to objects. If `isStatic` is true the object will not move and not be affected by other physics objects.
 
-`Phoenix.Rigidbody(density: number, friction: number, isStatic: boolean)` - Allows physics and other physical properties such as friction to be added to objects. If `isStatic` is true the object will not move and not be affected by other physics objects.
+**Sprites**
+
+- `Phoenix.Sprite(src: string)` - Stores an image texture used for the object by the renderer.
+
+- `Phoenix.CanvasSprite(canvas: HTMLCanvasElement)` - A sprite which uses an HTML canvas as it's source.
+
+- `Phoenix.TextSprite(text: string, fontOverride?: fontOps)` - A sprite that displays text supplied to it in a string.
+
+- `Phoenix.AnimatedSprite(frames: Array<string>, rate?: number)` - A sprite that swaps its texture between all the frames supplied to it sequentially. Can also be supplied a rate (in number of game frames each animation frame stays on screen).
+
+**Colliders:**
+
+- `Phoenix.BoxCollider(scale: Vector2)` - A simple rectangular collider. Physics objects collide with this but do not have any effect on it's position or rotation. A `Rigidbody` with `isStatic = true` will allow for more properties such as friction to be added.
+
+- `Phoenix.CircleCollider(radius: number)` - A simple (circular) collider. Works exactly the same as the rectangular collider but circular!
 
 
 ### ApplicationArguments
@@ -208,9 +222,11 @@ Creates a transform with position (0,0) rotation of 0deg and scale of 0x0.
     - [x] Box Collider
     - [x] Circle Collider
     - [x] Camera
-    - [x] Canvas Renderer
-    - [x] Text Renderer
-    - [ ] Sprite Animator
+    - [x] Sprites
+        - [x] Image Sprite
+        - [x] Canvas Sprite
+        - [x] Text Sprite
+        - [x] Animated Sprite
 
 - Objects
     - [x] Initialization
