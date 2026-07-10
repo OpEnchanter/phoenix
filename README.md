@@ -3,6 +3,19 @@ A 2D game framework made for browser-based video games designed to mimic some de
 
 The demos for this project are relatively simple, just showing off the features of the engine. Although with more time, this could be used to make a full game.
 
+## Installation
+The engine can really easily be added to a Bun project with one command!
+```bash
+bun add github:openchanter/phoenix
+```
+
+Then it can be imported with:
+```typescript
+import * as Phoenix from 'phoenix'
+```
+
+Note that for the rest of these docs, any time the engine is imported, the import statement is formatted as if the engine is a local file in the app's `src` directory. This needs to be changed to the above import if installed via bun.
+
 ## Usage
 The entrypoint into the application must be loaded in a HTML document.
 In this example, the HTML provides a canvas element, styled to fit the screen properly and loads the Typescript entrypoint.
