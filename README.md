@@ -29,29 +29,31 @@ In this example, the HTML provides a canvas element, styled to fit the screen pr
                 margin: 0;
                 padding: 0;
 
-                overflow-y: hidden;
+                overflow: hidden;
             }
             body {
+                background: black;
+                display: flex;
                 padding: 0;
                 margin: 0;
 
                 width: 100vw;
                 height: 100vh;
+
+                align-items: center;
+                justify-content: center;
             }
             canvas {
                 background: black;
 
-                width: 100vw;
-                height: 100vh;
+                image-rendering: pixelated;
             }
         </style>
     </head>
     <body>
-        <canvas></canvas>
         <script type="module" src="src/main.ts"></script>
     </body>
 </html>
-
 ```
 
 ```typescript
