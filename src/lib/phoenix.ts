@@ -133,6 +133,47 @@ export class Vector2 {
     }
 }
 
+export class Matrix {
+    data: number[][];
+
+    constructor (data: number[][]) {
+        this.data = data;
+    }
+
+    public multiply(other: Matrix) {
+        if (!this.data[0]) return;
+        const matrixARows: number = this.data.length;
+        const matrixAColumns: number = this.data[0].length;
+
+        if (!other.data[0]) return;
+        const matrixBRows: number = other.data.length;
+        const matrixBColumns: number = other.data[0].length;
+
+        if (matrixAColumns != matrixBRows) {
+            console.log("Matrix multiplication failed: matrices don't match");
+            return;
+        }
+
+        const multiplied: number[][] = [];
+
+        for (let r = 0; r < matrixARows; r++) {
+            const row: number[] = []
+            for (let c = 0; c < matrixBColumns; c++) {
+                let num = 0;
+
+                for (let x = 0; x < matrixAColumns; x++) {
+                    num += this.data[r]![x]! * other.data[x]![c]!
+                }
+
+                row.push(num);
+            }
+            multiplied.push(row)
+        }
+
+        return new Matrix(multiplied);
+    }
+}
+
 export class Logger {
     public static error(m: string) {
         console.log(m, -1, "phoenix")
@@ -173,18 +214,87 @@ export class Component {
 // Built-in Components
 
 export class Transform extends Component {
+
+    // Local space transformation
     position: Vector2;
     rotation: number;
     scale: Vector2;
+
+    // Global space transformation
+    globalPosition: Vector2;
+    globalRotation: number;
+    globalScale: Vector2;
+
     constructor (postion: Vector2, rotation: number, scale: Vector2) {
         super()
         this.position = postion;
         this.rotation = rotation;
         this.scale = scale;
+
+        this.globalPosition = new Vector2(this.position.x, this.position.y);
+        this.globalRotation = this.rotation;
+        this.globalScale = new Vector2(this.scale.x, this.scale.y);
+    }
+
+    public applyTransformation() {
+        // Update the global position to the local position
+        // Then later, (if applicable) apply parent's transformation, rotation and scale
+        this.globalPosition.x = this.position.x;
+        this.globalPosition.y = this.position.y;
+
+        this.globalRotation = this.rotation;
+        
+        this.globalScale.x = this.scale.x;
+        this.globalScale.y = this.scale.y;
+
+        if (this.parent && this.parent!.parent && this.parent!.parent.getComponent(Transform)) {
+            const tf = this.parent!.parent.getComponent(Transform)
+            const parentTransformation = tf?.asTransformation();
+
+            // Rotate around the origin of the parent based on the parent's rotation
+            // and apply parent's position
+            const toPosition = new Matrix([
+                [1, 0, parentTransformation!.position.x],
+                [0, 1, parentTransformation!.position.y],
+                [0, 0, 1]
+            ])
+
+            const rotation = new Matrix([
+                [Math.cos(parentTransformation!.rotation * (Math.PI / 180)), -Math.sin(parentTransformation!.rotation * (Math.PI / 180)), 0],
+                [Math.sin(parentTransformation!.rotation * (Math.PI / 180)), Math.cos(parentTransformation!.rotation * (Math.PI / 180)), 0],
+                [0, 0, 1]
+            ])
+
+            const pos = new Matrix([
+                [this.position.x],
+                [this.position.y],
+                [1]
+            ])
+
+            const transformation = toPosition.multiply(rotation)
+            const rotated = transformation?.multiply(pos)
+
+            this.globalPosition.x = rotated!.data[0]![0]!
+            this.globalPosition.y = rotated!.data[1]![0]!
+
+            // Rotate by the parent's rotation (previous step only manipulates 2D position not object rotation)
+            this.globalRotation += parentTransformation!.rotation;
+        }
+    }
+
+    public override onInitialized(): void {
+        this.applyTransformation();
+
+        // If the object does not have a parent it's globalPosition will be equal to its localPosition (position)
+        // Example: The scene root node will have no parent and therefore will use it's localPosition as it's globalPosition
+    }
+
+    public override onUpdate(): void {
+        this.applyTransformation();
     }
 
     public asTransformation() {
-        return new Transformation(this.position, this.rotation, this.scale);
+        return new Transformation(new Vector2(this.globalPosition.x, this.globalPosition.y), this.globalRotation, this.globalScale);
     }
 }
 
@@ -352,9 +462,10 @@ export class Renderer extends Component {
 
     public override onLateUpdate(): void {
         if (!this.transform || !this.mesh || !this.parent) return
+        const transformation = this.transform.asTransformation();
         this.mesh.position.set(
-            this.transform.position.x, 
-            this.transform.position.y,
+            transformation.position.x, 
+            transformation.position.y,
             this.depth
         )
 
@@ -365,7 +476,7 @@ export class Renderer extends Component {
 
         this.mesh.rotation.set(
             0, 0,
-            this.transform.rotation * (Math.PI / 180)
+            transformation.rotation * (Math.PI / 180)
         )
     }
 }
@@ -397,7 +508,7 @@ export class Rigidbody extends Component {
 
     transform: Transform | undefined = undefined;
 
-    constructor (density: number, friction: number, isStatic: boolean) {
+    constructor (density: number, friction: number, isStatic: boolean, isKinematic?: boolean) {
         super();
         this.density = density;
         this.friction = friction;
@@ -410,9 +521,19 @@ export class Rigidbody extends Component {
 
     public override onUpdate(): void {
         if (!this.transform || !this.body) return
-        this.transform.position.x = this.body.getPosition().x * 32
-        this.transform.position.y = this.body.getPosition().y * 32
-        this.transform.rotation = this.body.getAngle() / (Math.PI / 180);
+        if (this.isStatic) {
+            this.body.setPosition({
+                x: this.transform.globalPosition.x / 32,
+                y: this.transform.globalPosition.y / 32
+            })
+
+            this.body.setAngle(this.transform.globalRotation * (Math.PI / 180))
+        }
+        if (!this.isStatic) {
+            this.transform.globalPosition.x = this.body.getPosition().x * 32
+            this.transform.globalPosition.y = this.body.getPosition().y * 32
+            this.transform.globalRotation = this.body.getAngle() / (Math.PI / 180);
+        }
     }
 
     public override onDestroyed(): void {
@@ -444,23 +565,35 @@ export class GameObject {
     components: Array<Component> = []
     app: App;
 
-    constructor (app: App) {
+    children: Array<GameObject> = [];
+
+    parent: GameObject | undefined;
+
+    childrenRemovalBuffer: GameObject[] = [];
+
+    constructor (app: App, parent: GameObject | undefined) {
         this.app = app;
+        this.parent = parent;
     }
 
     public onInitialized() {
+
+        // Call component initialization
         for (const c of this.components) {
             c.onInitialized();
         }
 
+        // Create planck bodies for physics interaction
         const rb = this.getComponent(Rigidbody);
         const tf = this.getComponent(Transform);
         if (!tf) return
+
+        const tfm = tf.asTransformation();
+
         const body = this.app.plWorld.createBody({
             type: (rb && !rb.isStatic) ? "dynamic" : "static",
-            position: {x: tf.position.x / 32, y: tf.position.y / 32},
-            angle: tf.rotation * (Math.PI / 180),
-            
+            position: {x: tfm.position.x / 32, y: tfm.position.y / 32},
+            angle: tfm.rotation * (Math.PI / 180)  
         })
 
         const boxColliders = this.getComponents(BoxCollider);
@@ -479,20 +612,58 @@ export class GameObject {
         }
 
         if (rb) rb.body = body;
+
+        // Initialize children
+        for (const c of this.children) {
+            c.onInitialized();
+        }
     }
+
+    public addChild(child: GameObject) {
+        child.parent = this;
+        this.children.push(child);
+    }
+
+    public removeChild(child: GameObject) {
+        this.children.splice(this.children.indexOf(child), 1)
+    }
+
     public onDestroyed() {
+        // Call for all components to destroy
         for (const c of this.components) {
             c.onDestroyed();
         }
+
+        // Call for all children to destroy recursively until end of scene graph
+        for (const c of this.children) {
+            c.onDestroyed();
+        }
+
+        // Once all children have destroyed, then remove this object from it's parent
+        //this.parent?.children.splice(this.parent.children.indexOf(this), 1);
+        for (const c of this.childrenRemovalBuffer) {
+            this.removeChild(c);
+        }
+        this.childrenRemovalBuffer.length = 0;
+        this.parent?.childrenRemovalBuffer.push(this)
     }
 
     public onUpdate() {
         for (const c of this.components) {
             c.onUpdate();
         }
+
+        for (const c of this.children) {
+            c.onUpdate();
+        }
     }
+
     public onLateUpdate() {
         for (const c of this.components) {
+            c.onLateUpdate();
+        }
+
+        for (const c of this.children) {
             c.onLateUpdate();
         }
     }
@@ -513,6 +684,16 @@ export class GameObject {
             }
         }
         return cs;
+    }
+}
+
+class SceneGraphRoot extends GameObject {
+    constructor (app: App) {
+        super(app, undefined);
+
+        this.components.push(
+            new Transform(new Vector2(0,0), 0, new Vector2(1,1))
+        )
     }
 }
 
@@ -540,7 +721,6 @@ export class App {
 
     args: ApplicationArguments;
     drawBuffer: Array<DrawRequest> = [];
-    objects: Array<GameObject> = [];
     ctx: CanvasRenderingContext2D | null = null;
     canvas: HTMLCanvasElement | null = null;
     
@@ -577,6 +757,9 @@ export class App {
     private mousePos = new Vector2(0, 0);
 
     frameIntervalCallbacks: Array<() => void> = [];
+
+    objects: Array<GameObject> = [];
+    sceneGraphRoot: SceneGraphRoot = new SceneGraphRoot(this)
 
     constructor (args: ApplicationArguments) {
 
@@ -710,6 +893,8 @@ export class App {
         // Save running status
         this.isTicking = true;
 
+        this.sceneGraphRoot.onInitialized();
+
         // Begin frame loop
         this.renderer.setAnimationLoop(() => {
             this.plWorld.step(this.deltaTime / 1000, 10, 6);
@@ -745,22 +930,16 @@ export class App {
     }
 
     private update() {
-        for (const o of this.objects) {
-            o.onUpdate()
-        }
-
-        for (const o of this.objects) {
-            o.onLateUpdate()
-        }
+        this.sceneGraphRoot.onUpdate();
+        this.sceneGraphRoot.onLateUpdate();
 
         for (const o of this.objectAdditionBuffer) {
-            this.objects.push(o);
+            this.sceneGraphRoot.addChild(o);
             o.onInitialized();
         }
 
         for (const o of this.objectRemovalBuffer) {
             o.onDestroyed();
-            this.objects.splice(this.objects.indexOf(o), 1);
         }
 
         this.objectAdditionBuffer.length = 0;
@@ -768,7 +947,11 @@ export class App {
     }
 
     public addObject(object: GameObject) {
-        this.objectAdditionBuffer.push(object);
+        if (this.isTicking) {
+            this.objectAdditionBuffer.push(object);
+        } else {
+            this.sceneGraphRoot.addChild(object)
+        }
     }
 
     public removeObject(object: GameObject) {
@@ -776,12 +959,11 @@ export class App {
             this.objectRemovalBuffer.push(object);
         } else {
             object.onDestroyed();
-            this.objects.splice(this.objects.indexOf(object), 1);
         }
     }
 
     public createObject(...components: Component[]): GameObject {
-        const obj = new GameObject(this);
+        const obj = new GameObject(this, this.sceneGraphRoot);
         obj.app = this;
         for (const c of components) {
             c.parent = obj;
@@ -808,10 +990,10 @@ export class App {
             this.stop();
         }
 
-        for (const o of this.objects) {
+        for (const o of this.sceneGraphRoot.children) {
             o.onDestroyed();
         }
-        this.objects.length = 0;
+        this.sceneGraphRoot.children.length = 0;
 
         this.scenes[name]!.onLoad(this);
 

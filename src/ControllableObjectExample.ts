@@ -59,6 +59,12 @@ export class Scene extends Phoenix.Scene {
             new ControllableComponent()
         )
 
+        player.addChild(app.createObject(
+            new Phoenix.Transform(new Phoenix.Vector2(0,0), 0, new Phoenix.Vector2(16, 16)),
+            new Phoenix.Sprite("assets/null.png"),
+            new Phoenix.Renderer(1)
+        ))
+
         app.addObject(app.createObject(
             new Phoenix.Transform(new Phoenix.Vector2(48, 0), 0, new Phoenix.Vector2(32, 32)),
             new Phoenix.AnimatedSprite(["assets/brick.png", "assets/null.png"]),
