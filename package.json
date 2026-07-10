@@ -2,6 +2,8 @@
   "name": "phoenix",
   "module": "index.ts",
   "type": "module",
+  "main": "./src/lib/phoenix.ts",
+  "types": "./src/lib/phoenix.ts",
   "private": true,
   "scripts": {
     "dev": "vite dev",
