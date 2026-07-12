@@ -661,11 +661,10 @@ export class ParticleSystem extends Component {
             const position = this.positions[i]!;
             const velocity = this.velocities[i]!;
 
-            this.positions[i]!.x += velocity.x;
-            this.positions[i]!.y += velocity.y;
+            this.positions[i]!.x += velocity.x * 16/this.parent?.app.deltaTime!;
+            this.positions[i]!.y += velocity.y * 16/this.parent?.app.deltaTime!;
 
             this.velocities[i]!.y -= 0.03 * this.parent?.app.deltaTime!;
-
             this.velocities[i]!.y *= 0.99;
 
             const transformationMatrix = new THREE.Matrix4();

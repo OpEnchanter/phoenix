@@ -154,6 +154,10 @@ Without components, objects do not render, have a sprite, or even have a positio
 
 - `Phoenix.CircleCollider(radius: number)` - A simple (circular) collider. Works exactly the same as the rectangular collider but circular!
 
+**Particles:**
+
+- `Phoenix.ParticleSystem(particleSprite: string, count: number, scale: Vector2)` - A particle system that will spawn in any number of efficiently instanced particles that shoot out of their emitter in random directions and fall due to gravity.
+
 
 ### ApplicationArguments
 Arguments that can be supplied to the App.
