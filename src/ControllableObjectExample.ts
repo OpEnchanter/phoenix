@@ -56,6 +56,7 @@ export class Scene extends Phoenix.Scene {
             new Phoenix.Renderer(0),
             new Phoenix.BoxCollider(new Phoenix.Vector2(32, 32)),
             new Phoenix.Rigidbody(1, 1, false),
+            new Phoenix.ParticleSystem("assets/brick.png", 10, new Phoenix.Vector2(24, 24)),
             new ControllableComponent()
         )
 

@@ -67,6 +67,21 @@ export const DefaultVertexShader = `
     }
 `
 
+export const DefaultInstancedVertexShader = `
+    out vec3 fragPosition;
+    out vec2 fragTexCoord;
+    out vec3 fragNormal;
+
+    void main() {
+        vec4 transformedPosition = instanceMatrix * vec4(position, 1.0);
+        fragPosition = vec3(modelMatrix * transformedPosition);
+        fragTexCoord = uv;
+        fragNormal = normalize(normalMatrix * mat3(instanceMatrix) * normal);
+
+        gl_Position = projectionMatrix * viewMatrix * modelMatrix * transformedPosition;
+    }
+`
+
 export const DefaultFragmentShader = `
     in vec2 fragTexCoord;
 
@@ -553,11 +568,130 @@ export class Camera extends Component {
 
     public override onUpdate(): void {
         if (!this.transform || !this.rendererCamera) return
-        this.rendererCamera.position.setX(this.transform.position.x);
-        this.rendererCamera.position.setY(this.transform.position.y);
-        this.rendererCamera.setRotationFromEuler(new THREE.Euler(0, 0, this.transform.rotation * (Math.PI / 180)))
+        this.rendererCamera.position.setX(this.transform.globalPosition.x);
+        this.rendererCamera.position.setY(this.transform.globalPosition.y);
+        this.rendererCamera.setRotationFromEuler(new THREE.Euler(0, 0, this.transform.globalRotation * (Math.PI / 180)))
     }
 } 
+
+export class ParticleSystem extends Component {
+
+    mesh: THREE.InstancedMesh | undefined = undefined;
+    meshInstanceIds: number[] = [];
+    positions: Vector2[] = [];
+    velocities: Vector2[] = [];
+
+    transform: Transform | undefined = undefined;
+
+    spriteUrl: string;
+    count: number;
+    scale: Vector2;
+
+    loadTexture(url: string): THREE.Texture {
+        return new THREE.TextureLoader().load(url, (tex) => {
+            tex.colorSpace = THREE.SRGBColorSpace;
+            tex.magFilter = THREE.NearestFilter;
+            tex.minFilter = THREE.NearestFilter;
+        })
+    }
+
+    constructor(particleSprite: string, count: number, scale: Vector2) {
+        super()
+
+        this.spriteUrl = particleSprite;
+        this.count = count;
+        this.scale = scale;
+    }
+
+    public override onInitialized(): void {
+        this.transform = this.parent?.getComponent(Transform);
+        if (!this.transform) return;
+
+        // Create BatchedMesh with texture and count of objects
+        const geo = new THREE.PlaneGeometry(this.scale.x, this.scale.y);
+        const texture = this.loadTexture(this.spriteUrl);
+        const material = new THREE.ShaderMaterial({
+            glslVersion: THREE.GLSL3,
+            vertexShader: DefaultInstancedVertexShader,
+            fragmentShader: defaultShader.fragmentShader,
+            uniforms: {
+                uTex: { value: texture}
+            },
+            transparent: true
+        })
+
+        this.mesh = new THREE.InstancedMesh(geo, material, this.count);
+
+        for (let c = 0; c < this.count; c++) {
+            const position = new Vector2(
+                this.transform.globalPosition.x, 
+                this.transform.globalPosition.y
+            );
+
+            const velocity = new Vector2(
+                Math.random()*12 - 6, Math.random()*12
+            );
+
+            this.positions.push(position);
+            this.velocities.push(velocity);
+
+            const transformationMatrix = new THREE.Matrix4();
+            transformationMatrix.compose(
+                new THREE.Vector3(
+                    position.x,
+                    position.y,
+                    2
+                ),
+                new THREE.Quaternion(),
+                new THREE.Vector3( 1, 1, 1 )
+            )
+
+            this.mesh.setMatrixAt(c, transformationMatrix);
+        }
+
+        this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+
+        console.log("PARTICLE SYSTEM INITIALIZED")
+
+        this.parent!.app.renderScene.add(this.mesh);
+    }
+
+    public override onUpdate(): void {
+        for (let i = 0; i < this.positions.length; i++) {
+            const position = this.positions[i]!;
+            const velocity = this.velocities[i]!;
+
+            this.positions[i]!.x += velocity.x;
+            this.positions[i]!.y += velocity.y;
+
+            this.velocities[i]!.y -= 0.03 * this.parent?.app.deltaTime!;
+
+            this.velocities[i]!.y *= 0.99;
+
+            const transformationMatrix = new THREE.Matrix4();
+            transformationMatrix.compose(
+                new THREE.Vector3(
+                    position.x,
+                    position.y,
+                    0
+                ),
+                new THREE.Quaternion(),
+                new THREE.Vector3( 1, 1, 1 )
+            )
+
+            this.mesh?.setMatrixAt(i, transformationMatrix);
+        }
+
+        this.mesh!.instanceMatrix.needsUpdate = true;
+    }
+
+    public override onDestroyed(): void {
+        this.parent?.app.renderScene.remove(this.mesh as THREE.Mesh);
+        this.mesh?.geometry.dispose();
+        (this.mesh?.material as THREE.Material).dispose();
+        this.mesh?.dispose();
+    }
+}
 
 // Game Objects
 
