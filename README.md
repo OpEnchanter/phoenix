@@ -3,6 +3,9 @@ A 2D game framework made for browser-based video games designed to mimic some de
 
 The demos for this project are relatively simple, just showing off the features of the engine. Although with more time, this could be used to make a full game.
 
+> [!NOTE]
+> All of the currently implemented features are listed at the bottom of this README, but the TODOs and planned features for this project are in the [issues](https://github.com/OpEnchanter/phoenix/issues). Feel free to add an issue if there is any bug you notice or feature you would like to request!
+
 ## Installation
 The engine can really easily be added to a Bun project with one command!
 ```bash
