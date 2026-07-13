@@ -506,10 +506,12 @@ export class BoxCollider extends Component {
     scale: Vector2;
     isTrigger: boolean;
     body: pl.Body | undefined;
-    constructor (scale: Vector2, isTrigger?: boolean) {
+    offset: Vector2;
+    constructor (scale: Vector2, isTrigger?: boolean, offset?: Vector2) {
         super();
         this.scale = scale;
         this.isTrigger = isTrigger ? isTrigger : false;
+        this.offset = offset ? offset : new Vector2(0,0);
     }
 
     public override onUpdate(): void {
@@ -531,10 +533,12 @@ export class CircleCollider extends Component {
     radius: number;
     isTrigger: boolean;
     body: pl.Body | undefined;
-    constructor (radius: number, isTrigger?: boolean) {
+    offset: Vector2;
+    constructor (radius: number, isTrigger?: boolean, offset?: Vector2) {
         super();
         this.radius = radius;
         this.isTrigger = isTrigger ? isTrigger : false;
+        this.offset = offset ? offset : new Vector2(0,0);
     }
 
     public override onUpdate(): void {
@@ -910,7 +914,7 @@ export class GameObject {
         const boxColliders = this.getComponents(BoxCollider);
         for (const b of boxColliders) {
             const fixture = body.createFixture({
-                shape: pl.Box(b.scale.x/64, b.scale.y/64),
+                shape: pl.Box(b.scale.x/64, b.scale.y/64, pl.Vec2(b.offset.x/64, b.offset.y/64)),
                 ...(rb && {density: rb.density, friction: rb.friction})
             });
             fixture.setSensor(b.isTrigger);
@@ -920,13 +924,15 @@ export class GameObject {
         const circleColliders = this.getComponents(CircleCollider);
         for (const c of circleColliders) {
             const fixture = body.createFixture({
-                shape: pl.Circle(c.radius / 32),
+                shape: pl.Circle(pl.Vec2(c.offset.x/64, c.offset.y/64), c.radius / 64),
                 ...(rb && {density: rb.density, friction: rb.friction})
             })
             fixture.setSensor(c.isTrigger);
 
             c.body = body;
         }
+
+        body.resetMassData();
 
         if (rb) rb.body = body;
 
