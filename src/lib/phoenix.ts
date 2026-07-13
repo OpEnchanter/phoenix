@@ -224,6 +224,14 @@ export class Component {
 
     public onUpdate() {}
     public onLateUpdate() {}
+
+    public onCollisionEnter() {}
+    public onCollisionExit() {}
+    public onCollisionStay() {}
+
+    public onTriggerEnter() {}
+    public onTriggerExit() {}
+    public onTriggerStay() {}
 }
 
 // Built-in Components
@@ -496,18 +504,51 @@ export class Renderer extends Component {
 
 export class BoxCollider extends Component {
     scale: Vector2;
-
-    constructor (scale: Vector2) {
+    isTrigger: boolean;
+    body: pl.Body | undefined;
+    constructor (scale: Vector2, isTrigger?: boolean) {
         super();
         this.scale = scale;
+        this.isTrigger = isTrigger ? isTrigger : false;
+    }
+
+    public override onUpdate(): void {
+        for (let edge = this.body?.getContactList(); edge; edge = edge.next) {
+            const contact = edge.contact;
+
+            if (contact.isTouching()) {
+                if (this.isTrigger) {
+                    this.parent!.isTriggered = true;
+                } else {
+                    this.parent!.isColliding = true;
+                }
+            }
+        }
     }
 }
 
 export class CircleCollider extends Component {
     radius: number;
-    constructor (radius: number) {
+    isTrigger: boolean;
+    body: pl.Body | undefined;
+    constructor (radius: number, isTrigger?: boolean) {
         super();
         this.radius = radius;
+        this.isTrigger = isTrigger ? isTrigger : false;
+    }
+
+    public override onUpdate(): void {
+        for (let edge = this.body?.getContactList(); edge; edge = edge.next) {
+            const contact = edge.contact;
+
+            if (contact.isTouching()) {
+                if (this.isTrigger) {
+                    this.parent!.isTriggered = true;
+                } else {
+                    this.parent!.isColliding = true;
+                }
+            }
+        }
     }
 }
 
@@ -829,6 +870,14 @@ export class GameObject {
 
     childrenRemovalBuffer: GameObject[] = [];
 
+    plBody: pl.Body | undefined;
+
+    isColliding = false;
+    isTriggered = false;
+
+    isCollidingOld = false;
+    isTriggeredOld = false;
+
     constructor (app: App, parent: GameObject | undefined) {
         this.app = app;
         this.parent = parent;
@@ -854,21 +903,29 @@ export class GameObject {
             angle: tfm.rotation * (Math.PI / 180)
         })
 
+        this.plBody = body;
+
         if (rb) body.setFixedRotation(rb?.lockRotation);
 
         const boxColliders = this.getComponents(BoxCollider);
         for (const b of boxColliders) {
-            body.createFixture({
+            const fixture = body.createFixture({
                 shape: pl.Box(b.scale.x/64, b.scale.y/64),
                 ...(rb && {density: rb.density, friction: rb.friction})
-            })
+            });
+            fixture.setSensor(b.isTrigger);
+
+            b.body = body;
         }
         const circleColliders = this.getComponents(CircleCollider);
         for (const c of circleColliders) {
-            body.createFixture({
+            const fixture = body.createFixture({
                 shape: pl.Circle(c.radius / 32),
                 ...(rb && {density: rb.density, friction: rb.friction})
             })
+            fixture.setSensor(c.isTrigger);
+
+            c.body = body;
         }
 
         if (rb) rb.body = body;
@@ -889,6 +946,9 @@ export class GameObject {
     }
 
     public onDestroyed() {
+        // Remove the physics bodyd
+        (this.plBody && this.app.plWorld.destroyBody(this.plBody))
+
         // Call for all components to destroy
         for (const c of this.components) {
             c.onDestroyed();
@@ -909,6 +969,9 @@ export class GameObject {
     }
 
     public onUpdate() {
+        this.isTriggered = false;
+        this.isColliding = false;
+
         for (const c of this.components) {
             c.onUpdate();
         }
@@ -916,6 +979,45 @@ export class GameObject {
         for (const c of this.children) {
             c.onUpdate();
         }
+
+        if (this.isColliding && !this.isCollidingOld) {
+            for (const c of this.components) {
+                c.onCollisionEnter();
+            }
+        }
+
+        if (this.isColliding && this.isCollidingOld) {
+            for (const c of this.components) {
+                c.onCollisionStay();
+            }
+        }
+
+        if (!this.isColliding && this.isCollidingOld) {
+            for (const c of this.components) {
+                c.onCollisionExit();
+            }
+        }
+
+        if (this.isTriggered && !this.isTriggeredOld) {
+            for (const c of this.components) {
+                c.onTriggerEnter();
+            }
+        }
+
+        if (this.isTriggered && this.isTriggeredOld) {
+            for (const c of this.components) {
+                c.onTriggerStay();
+            }
+        }
+
+        if (!this.isTriggered && this.isTriggeredOld) {
+            for (const c of this.components) {
+                c.onTriggerExit();
+            }
+        }
+
+        this.isCollidingOld = this.isColliding;
+        this.isTriggeredOld = this.isTriggered;
     }
 
     public onLateUpdate() {

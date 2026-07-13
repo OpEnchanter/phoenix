@@ -48,6 +48,14 @@ class CameraController extends Phoenix.Component {
     }
 }
 
+class TestComponent extends Phoenix.Component {
+    public override onCollisionEnter(): void {
+        if (!this.parent) return
+        console.log("TRIGGER")
+        this.parent.onDestroyed();
+    }
+}
+
 export class Scene extends Phoenix.Scene {
     public override onLoad(app: Phoenix.App): void {
         const player = app.createObject(
@@ -65,6 +73,14 @@ export class Scene extends Phoenix.Scene {
             new Phoenix.Sprite("assets/null.png"),
             new Phoenix.Renderer(1)
         ))
+
+        app.addObject(app.createObject(
+            new Phoenix.Transform(new Phoenix.Vector2(256, 0), 0, new Phoenix.Vector2(32, 32)),
+            new Phoenix.Sprite("assets/brick.png"),
+            new Phoenix.Renderer(0),
+            new Phoenix.BoxCollider(new Phoenix.Vector2(32, 32), false),
+            new TestComponent()
+        ));
 
         app.addObject(app.createObject(
             new Phoenix.Transform(new Phoenix.Vector2(164, 32), 0, new Phoenix.Vector2(64, 64)),
