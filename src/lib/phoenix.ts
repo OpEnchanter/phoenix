@@ -502,6 +502,76 @@ export class Renderer extends Component {
     }
 }
 
+export class InstancedRenderer extends Component {
+
+    mesh: THREE.InstancedMesh | undefined = undefined;
+    meshInstanceIds: number[] = [];
+    positions: Vector2[] = [];
+
+    transform: Transform | undefined = undefined;
+    sprite: Sprite | undefined = undefined;
+
+    count: number;
+    scale: Vector2;
+
+    constructor(positions: Array<Vector2>, scale: Vector2) {
+        super()
+
+        this.positions = positions;
+        this.count = positions.length;
+        this.scale = scale;
+    }
+
+    public override onInitialized(): void {
+        this.transform = this.parent?.getComponent(Transform);
+        this.sprite = this.parent?.getComponent(Sprite);
+        if (!this.transform || !this.sprite) return;
+
+        // Create BatchedMesh with texture and count of objects
+        const geo = new THREE.PlaneGeometry(this.scale.x, this.scale.y);
+        const texture = this.sprite.texture;
+        const material = new THREE.ShaderMaterial({
+            glslVersion: THREE.GLSL3,
+            vertexShader: DefaultInstancedVertexShader,
+            fragmentShader: defaultShader.fragmentShader,
+            uniforms: {
+                uTex: { value: texture}
+            },
+            transparent: true
+        })
+
+        this.mesh = new THREE.InstancedMesh(geo, material, this.count);
+
+        for (let c = 0; c < this.count; c++) {
+            const position = this.positions[c]!
+
+            const transformationMatrix = new THREE.Matrix4();
+            transformationMatrix.compose(
+                new THREE.Vector3(
+                    position.x,
+                    position.y,
+                    2
+                ),
+                new THREE.Quaternion(),
+                new THREE.Vector3( 1, 1, 1 )
+            )
+
+            this.mesh.setMatrixAt(c, transformationMatrix);
+        }
+
+        this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+
+        this.parent!.app.renderScene.add(this.mesh);
+    }
+
+    public override onDestroyed(): void {
+        this.parent?.app.renderScene.remove(this.mesh as THREE.Mesh);
+        this.mesh?.geometry.dispose();
+        (this.mesh?.material as THREE.Material).dispose();
+        this.mesh?.dispose();
+    }
+}
+
 export class BoxCollider extends Component {
     scale: Vector2;
     isTrigger: boolean;
@@ -696,8 +766,6 @@ export class ParticleSystem extends Component {
         }
 
         this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
-
-        console.log("PARTICLE SYSTEM INITIALIZED")
 
         this.parent!.app.renderScene.add(this.mesh);
     }
