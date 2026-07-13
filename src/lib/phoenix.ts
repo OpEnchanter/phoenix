@@ -1094,7 +1094,7 @@ export class App {
         })
 
         this.screenSpaceScene.add(new THREE.Mesh(
-            new THREE.PlaneGeometry(HI_W * 2, HI_W * (9 / 16) * 2),
+            new THREE.PlaneGeometry(HI_H * (16 / 9), HI_H),
 
             // Screen-space shader injection
             this.screenSpaceShader
