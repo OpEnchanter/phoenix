@@ -1,6 +1,5 @@
 import * as Phoenix from "./lib/phoenix.ts";
 import * as ImpulseComponentExample from "./ImpulseComponentExample.ts";
-import * as ManyObjectsExample from "./ManyObjectsExample.ts";
 import * as ControllableObjectExample from "./ControllableObjectExample.ts";
 
 import * as THREE from "three";
@@ -85,7 +84,7 @@ let lightColors = [
     new THREE.Vector3(1.0,0.0,0)
 ]
 
-const rScale = new Phoenix.Vector2(1920, 1080)
+const rScale = new Phoenix.Vector2(2560, 1440)
 
 const app: Phoenix.App = new Phoenix.App({
     zoom: 1/1,
@@ -130,7 +129,6 @@ app.addFrameIntervalCallback(() => {
 
 
 app.addScene("0", new ImpulseComponentExample.Scene())
-app.addScene("1", new ManyObjectsExample.Scene())
 app.addScene("2", new ControllableObjectExample.Scene())
 
 app.loadScene("0")

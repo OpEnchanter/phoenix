@@ -441,11 +441,9 @@ export class Renderer extends Component {
         this.transform = this.parent.getComponent(Transform);
 
         // Search for any component derived from sprite
-        this.sprite = this.sprite = this.parent.getComponent(Sprite);
+        this.sprite = this.parent.getComponent(Sprite);
 
         if (!this.sprite) return
-
-        if (this.sprite instanceof TextSprite) console.log(this.sprite.texture?.height)
 
         const texture = this.sprite.texture;
 
@@ -519,15 +517,18 @@ export class Rigidbody extends Component {
 
     isStatic: boolean;
 
+    lockRotation: boolean;
+
     public body: pl.Body | undefined = undefined;
 
     transform: Transform | undefined = undefined;
 
-    constructor (density: number, friction: number, isStatic: boolean, isKinematic?: boolean) {
+    constructor (density: number, friction: number, isStatic: boolean, lockRotation?: boolean) {
         super();
         this.density = density;
         this.friction = friction;
         this.isStatic = isStatic;
+        this.lockRotation = lockRotation ? lockRotation : false;
     }
 
     public override onInitialized(): void {
@@ -692,6 +693,80 @@ export class ParticleSystem extends Component {
     }
 }
 
+export class UIRenderer extends Component {
+    depth: number;
+
+    transform: Transform | undefined;
+    sprite: Sprite | undefined;
+
+    shader: shaderOps = defaultShader;
+
+    mesh: THREE.Mesh | undefined;
+
+    constructor(depth: number, shaderOverride?: shaderOps) {
+        super();
+        this.depth = depth;
+        this.shader = {
+            fragmentShader: ScreenspaceDefaultFragmentShader,
+            vertexShader: DefaultVertexShader,
+            uniforms: defaultShader.uniforms,
+            ...shaderOverride
+        }
+        if (shaderOverride) this.shader = shaderOverride;
+    }
+
+    public override onInitialized(): void {
+        this.transform = this.parent?.getComponent(Transform);
+        this.sprite = this.parent?.getComponent(Sprite);
+
+        if (!this.transform || !this.sprite) return;
+
+        const geo = new THREE.PlaneGeometry(this.transform.scale.x, this.transform.scale.y);
+        const tex = this.sprite.texture;
+        const mat = new THREE.ShaderMaterial({
+            glslVersion: THREE.GLSL3,
+            vertexShader: this.shader.vertexShader,
+            fragmentShader: this.shader.fragmentShader,
+            uniforms: {
+                uTex: { value: tex},
+                ...this.shader.uniforms
+            },
+            transparent: true
+        });
+
+        tex!.colorSpace = THREE.LinearSRGBColorSpace;
+
+        this.mesh = new THREE.Mesh(geo, mat);
+
+        this.parent?.app.screenSpaceScene.add(this.mesh);
+    }
+
+    public override onDestroyed(): void {
+        this.parent?.app.screenSpaceScene.remove(this.mesh as THREE.Mesh);
+        (this.mesh!.material as THREE.Material).dispose();
+        this.mesh?.geometry.dispose();
+    }
+
+    public override onLateUpdate(): void {
+        if (!this.transform) return;
+        this.mesh?.position.set(
+            this.transform.globalPosition.x,
+            this.transform.globalPosition.y,
+            this.depth
+        )
+
+        const mat = (this.mesh!.material as THREE.ShaderMaterial);
+        if (this.sprite?.texture !== mat.uniforms.uTex!.value) {
+            mat.uniforms.uTex!.value = this.sprite!.texture
+        }
+
+        this.mesh!.rotation.set(
+            0, 0,
+            this.transform.globalRotation * (Math.PI / 180)
+        )
+    }
+}
+
 // Game Objects
 
 export class GameObject {
@@ -726,8 +801,10 @@ export class GameObject {
         const body = this.app.plWorld.createBody({
             type: (rb && !rb.isStatic) ? "dynamic" : "static",
             position: {x: tfm.position.x / 32, y: tfm.position.y / 32},
-            angle: tfm.rotation * (Math.PI / 180)  
+            angle: tfm.rotation * (Math.PI / 180)
         })
+
+        if (rb) body.setFixedRotation(rb?.lockRotation);
 
         const boxColliders = this.getComponents(BoxCollider);
         for (const b of boxColliders) {
@@ -892,7 +969,7 @@ export class App {
     frameIntervalCallbacks: Array<() => void> = [];
 
     objects: Array<GameObject> = [];
-    sceneGraphRoot: SceneGraphRoot = new SceneGraphRoot(this)
+    sceneGraphRoot: SceneGraphRoot = new SceneGraphRoot(this);
 
     constructor (args: ApplicationArguments) {
 
@@ -939,25 +1016,34 @@ export class App {
         this.camera.position.z = 10;
 
         // Scaling up to screen
-        this.screenSpaceCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        const HI_W = window.innerWidth; const HI_H = window.innerWidth * (9 / 16);
+
+        this.screenSpaceCamera = new THREE.OrthographicCamera(
+            -HI_W / 2, 
+            HI_W / 2, 
+            HI_H / 2, 
+            -HI_H / 2, 
+            0, 100);
+            
+        this.screenSpaceCamera.position.set(0, 0, 10);
 
         this.renderer.setClearColor(this.args.clearColor!);
 
-        this.screenSpaceScene = new THREE.Scene;
+        this.screenSpaceScene = new THREE.Scene();
 
         this.screenSpaceShader = new THREE.ShaderMaterial({ 
-                glslVersion: THREE.GLSL3,
-                uniforms: {
-                    uTex: { value: this.renderTarget.texture },
-                    uDepth: { value: this.renderTarget.depthTexture },
-                    ...this.args.shaderOverride?.uniforms
-                },
-                vertexShader: this.args.shaderOverride ? this.args.shaderOverride.vertexShader : defaultShader.vertexShader,
-                fragmentShader: this.args.shaderOverride ? this.args.shaderOverride.fragmentShader : defaultShader.fragmentShader
-            })
+            glslVersion: THREE.GLSL3,
+            uniforms: {
+                uTex: { value: this.renderTarget.texture },
+                uDepth: { value: this.renderTarget.depthTexture },
+                ...this.args.shaderOverride?.uniforms
+            },
+            vertexShader: this.args.shaderOverride ? this.args.shaderOverride.vertexShader : defaultShader.vertexShader,
+            fragmentShader: this.args.shaderOverride ? this.args.shaderOverride.fragmentShader : defaultShader.fragmentShader
+        })
 
         this.screenSpaceScene.add(new THREE.Mesh(
-            new THREE.PlaneGeometry(2, 2),
+            new THREE.PlaneGeometry(HI_W, HI_H),
 
             // Screen-space shader injection
             this.screenSpaceShader

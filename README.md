@@ -1,7 +1,7 @@
 # phoenix
 A 2D game framework made for browser-based video games designed to mimic some design paradigms of the Unity game engine. Using Bun + Typescript and bundled with Vite. Uses the [Planck.js](https://piqnt.github.io/planck.js/docs/body.html) physics engine and [THREE.js](https://threejs.org/) for rendering.
 
-The demos for this project are relatively simple, just showing off the features of the engine. Although with more time, this could be used to make a full game.
+This repository also includes some demo scenes showcasing the features that the engine provides. In theory, this engine also has the capability to be used in the creation of a full game! The demo can be found [here](https://openchanter.github.com/phoenix)
 
 > [!NOTE]
 > All of the currently implemented features are listed at the bottom of this README, but the TODOs and planned features for this project are in the [issues](https://github.com/OpEnchanter/phoenix/issues). Feel free to add an issue if there is any bug you notice or feature you would like to request!

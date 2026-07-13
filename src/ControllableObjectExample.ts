@@ -17,9 +17,9 @@ class ControllableComponent extends Phoenix.Component {
         }
 
         if (this.parent?.app.getKey("a")) {
-            this.body.applyAngularImpulse(0.2, false)
+            this.body.applyLinearImpulse({x:-1, y:0}, {x: this.body.getPosition().x, y: this.body.getPosition().y})
         } else if (this.parent?.app.getKey("d")) {
-            this.body.applyAngularImpulse(-0.2, false)
+            this.body.applyLinearImpulse({x:1, y:0}, {x: this.body.getPosition().x, y: this.body.getPosition().y})
         }
     }
 }
@@ -43,8 +43,8 @@ class CameraController extends Phoenix.Component {
 
     public override onUpdate(): void {
         if (!this.transform || !this.targetTransform) return
-        this.transform.position.x += (this.targetTransform.position.x - this.transform.position.x) / 4;
-        this.transform.position.y += (this.targetTransform.position.y - this.transform.position.y) / 4;
+        this.transform.position.x += (this.targetTransform.globalPosition.x - this.transform.position.x) / 4;
+        this.transform.position.y += (this.targetTransform.globalPosition.y - this.transform.position.y) / 4;
     }
 }
 
@@ -55,7 +55,7 @@ export class Scene extends Phoenix.Scene {
             new Phoenix.Sprite("assets/brick.png"),
             new Phoenix.Renderer(0),
             new Phoenix.BoxCollider(new Phoenix.Vector2(32, 32)),
-            new Phoenix.Rigidbody(1, 1, false),
+            new Phoenix.Rigidbody(1, 4, false, true),
             new Phoenix.ParticleSystem("assets/brick.png", 10, new Phoenix.Vector2(24, 24)),
             new ControllableComponent()
         )
@@ -67,11 +67,23 @@ export class Scene extends Phoenix.Scene {
         ))
 
         app.addObject(app.createObject(
-            new Phoenix.Transform(new Phoenix.Vector2(48, 0), 0, new Phoenix.Vector2(32, 32)),
+            new Phoenix.Transform(new Phoenix.Vector2(64, 96), 0, new Phoenix.Vector2(16, 16)),
             new Phoenix.AnimatedSprite(["assets/brick.png", "assets/null.png"]),
-            new Phoenix.Renderer(0),
-            new Phoenix.BoxCollider(new Phoenix.Vector2(32, 32)),
-            new Phoenix.Rigidbody(1, 1, false)
+            new Phoenix.UIRenderer(1)
+        ))
+
+        const st1 = new Phoenix.TextSprite("There are also elements rendered in the screen space!", {fontSize: 42, backgroundColor: "#7fefcf", padding: 8})
+        app.addObject(app.createObject(
+            new Phoenix.Transform(new Phoenix.Vector2(0, 128), 0, new Phoenix.Vector2(st1.texture!.width / 3, st1.texture!.height / 3)),
+            st1,
+            new Phoenix.UIRenderer(1)
+        ))
+
+        const st2 = new Phoenix.TextSprite("And particles!", {fontSize: 24, backgroundColor: "#7fefcf", padding: 8})
+        app.addObject(app.createObject(
+            new Phoenix.Transform(new Phoenix.Vector2(0, 112), 0, new Phoenix.Vector2(st2.texture!.width / 3, st2.texture!.height / 3)),
+            st2,
+            new Phoenix.UIRenderer(1)
         ))
 
         const t1 = new Phoenix.TextSprite("In this scene, there is a cube you can control...", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8});
@@ -81,14 +93,14 @@ export class Scene extends Phoenix.Scene {
             new Phoenix.Renderer(1)
         ));
 
-        const t2 = new Phoenix.TextSprite("Hit A to spin the cube left", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8});
+        const t2 = new Phoenix.TextSprite("Hit A to move the cube left", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8});
         app.addObject(app.createObject(
             new Phoenix.Transform(new Phoenix.Vector2(0, -147), 0, new Phoenix.Vector2(t2.texture!.width, t2.texture!.height)),
             t2,
             new Phoenix.Renderer(1)
         ));
 
-        const t3 = new Phoenix.TextSprite("Hit D to spin the cube right", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8});
+        const t3 = new Phoenix.TextSprite("Hit D to move the cube right", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8});
         app.addObject(app.createObject(
             new Phoenix.Transform(new Phoenix.Vector2(0, -209), 0, new Phoenix.Vector2(t3.texture!.width, t3.texture!.height)),
             t3,
