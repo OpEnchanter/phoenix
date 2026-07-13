@@ -7,7 +7,7 @@ import * as THREE from "three";
 const LitShader = `
     in vec2 fragTexCoord;
 
-    const int MAX_LIGHTS = 2;
+    const int MAX_LIGHTS = 1;
     uniform sampler2D uTex;
     uniform sampler2D uDepth;
     uniform int uNumLights;
@@ -95,7 +95,7 @@ const app: Phoenix.App = new Phoenix.App({
         vertexShader: Phoenix.DefaultVertexShader,
         fragmentShader: LitShader,
         uniforms: {
-            uNumLights: { value: 2 },
+            uNumLights: { value: 1 },
             uLightPositions: { value: lightPositions },
             uLightScales: { value: lightScales },
             uLightColors: { value: lightColors }
