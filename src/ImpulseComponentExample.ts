@@ -44,6 +44,20 @@ export class Scene extends Phoenix.Scene {
             }
         }
 
+        const bt1 = new Phoenix.TextSprite("Slow down time!", {fontSize: 32, backgroundColor: "#9a73ef", padding: 8});
+        app.addObject(app.createObject(
+            new Phoenix.Transform(
+                new Phoenix.Vector2(0, 496),
+                0,
+                new Phoenix.Vector2(bt1.texture!.width, bt1.texture!.height)
+            ),
+            bt1,
+            new Phoenix.UIRenderer(0),
+            new Phoenix.Button(() => {
+                app.args.timescale = (app.args.timescale == 1) ? 0.1 : 1
+            })
+        ))
+
         const t1 = new Phoenix.TextSprite("Hello! Welcome to this demo!", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8});
         app.addObject(app.createObject(
             new Phoenix.Transform(new Phoenix.Vector2(0, -83), 0, new Phoenix.Vector2(t1.texture!.width, t1.texture!.height)),

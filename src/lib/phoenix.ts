@@ -767,6 +767,56 @@ export class UIRenderer extends Component {
     }
 }
 
+export class Button extends Component {
+    isHovered: boolean = false;
+    isPressed: boolean = false;
+
+    isPressedOld: boolean = false;
+
+    transform: Transform | undefined;
+
+    onClick: () => void = () => {};
+    onHover: () => void = () => {};
+
+    constructor(onClickCallback?: () => void, onHoverCallback?: () => void) {
+        super();
+        this.onClick = onClickCallback ? onClickCallback : this.onClick;
+        this.onHover = onHoverCallback ? onHoverCallback : this.onHover;
+    }
+
+    public override onInitialized(): void {
+        this.transform = this.parent?.getComponent(Transform);
+    }
+
+    public override onUpdate(): void {
+        if (!this.transform) return;
+
+        const mousePos: Vector2 = this.parent!.app.getMousePos();
+        const pos: Vector2 = this.transform.globalPosition;
+        const scale: Vector2 = this.transform.scale;
+
+        this.isHovered = 
+            (mousePos.x > pos.x - (scale.x / 2)) && (mousePos.x < pos.x + (scale.x / 2)) && // X-Axis
+            (mousePos.y > pos.y - (scale.y / 2)) && (mousePos.y < pos.y + (scale.x / 2)) // Y-Axis
+
+        this.isPressed = this.isHovered && this.parent!.app.getMouseDown();
+
+        if (this.isPressed && !this.isPressedOld) {
+            this.onClick();
+        }
+
+        if (this.isHovered) {
+            this.onHover();
+
+            document.body.style.cursor = "pointer";
+        } else {
+            document.body.style.cursor = "default";
+        }
+
+        this.isPressedOld = this.isPressed;
+    }
+}
+
 // Game Objects
 
 export class GameObject {
@@ -965,6 +1015,7 @@ export class App {
 
     private keys: Record<string, boolean> = {};
     private mousePos = new Vector2(0, 0);
+    private mouseDown = false;
 
     frameIntervalCallbacks: Array<() => void> = [];
 
@@ -1016,14 +1067,14 @@ export class App {
         this.camera.position.z = 10;
 
         // Scaling up to screen
-        const HI_W = window.innerWidth; const HI_H = window.innerWidth * (9 / 16);
+        const HI_W = window.innerWidth; const HI_H = window.innerHeight;
 
         this.screenSpaceCamera = new THREE.OrthographicCamera(
             -HI_W / 2, 
             HI_W / 2, 
             HI_H / 2, 
             -HI_H / 2, 
-            0, 100);
+            0.1, 100);
             
         this.screenSpaceCamera.position.set(0, 0, 10);
 
@@ -1043,7 +1094,7 @@ export class App {
         })
 
         this.screenSpaceScene.add(new THREE.Mesh(
-            new THREE.PlaneGeometry(HI_W, HI_H),
+            new THREE.PlaneGeometry(HI_W * 3, HI_W * (9 / 16) * 3),
 
             // Screen-space shader injection
             this.screenSpaceShader
@@ -1065,7 +1116,6 @@ export class App {
 
         const w = this.renderScale.x * xScaleFactor; 
         const h = this.renderScale.y * yScaleFactor;
-        this.renderer.setSize(w, h);
 
         this.camera.left = -w / 2 * this.args.zoom!;
         this.camera.right = w / 2 * this.args.zoom!;
@@ -1073,6 +1123,16 @@ export class App {
         this.camera.top = h / 2 * this.args.zoom!;
         this.camera.bottom = -h / 2 * this.args.zoom!;
         this.camera.updateProjectionMatrix();
+
+        const HI_W = window.innerWidth; const HI_H = window.innerHeight;
+        this.renderer.setSize(HI_W, HI_H);
+
+        this.screenSpaceCamera.left = -HI_W / 2;
+        this.screenSpaceCamera.right = HI_W / 2;
+
+        this.screenSpaceCamera.top = HI_H / 2;
+        this.screenSpaceCamera.bottom = -HI_H / 2;
+        this.screenSpaceCamera.updateProjectionMatrix();
     }
 
     public getKey(k: string) {
@@ -1081,6 +1141,10 @@ export class App {
 
     public getMousePos() {
         return this.mousePos;
+    }
+
+    public getMouseDown() {
+        return this.mouseDown;
     }
 
     public start() {
@@ -1102,8 +1166,16 @@ export class App {
         });
 
         document.addEventListener("mousemove", (e) => {
-            this.mousePos.x = e.clientX;
-            this.mousePos.y = e.clientY;
+            this.mousePos.x = e.clientX - (window.innerWidth / 2);
+            this.mousePos.y = -e.clientY + (window.innerHeight / 2);
+        })
+
+        document.addEventListener("mousedown", (e) => {
+            this.mouseDown = true;
+        })
+
+        document.addEventListener("mouseup", (e) => {
+            this.mouseDown = false;
         })
 
         // Begin measuring deltaTime

@@ -67,21 +67,21 @@ export class Scene extends Phoenix.Scene {
         ))
 
         app.addObject(app.createObject(
-            new Phoenix.Transform(new Phoenix.Vector2(64, 96), 0, new Phoenix.Vector2(16, 16)),
+            new Phoenix.Transform(new Phoenix.Vector2(164, 32), 0, new Phoenix.Vector2(64, 64)),
             new Phoenix.AnimatedSprite(["assets/brick.png", "assets/null.png"]),
             new Phoenix.UIRenderer(1)
         ))
 
-        const st1 = new Phoenix.TextSprite("There are also elements rendered in the screen space!", {fontSize: 42, backgroundColor: "#7fefcf", padding: 8})
+        const st1 = new Phoenix.TextSprite("There are also elements rendered in screen space!", {fontSize: 32, backgroundColor: "#7fefcf", padding: 8})
         app.addObject(app.createObject(
-            new Phoenix.Transform(new Phoenix.Vector2(0, 128), 0, new Phoenix.Vector2(st1.texture!.width / 3, st1.texture!.height / 3)),
+            new Phoenix.Transform(new Phoenix.Vector2(0, 128), 0, new Phoenix.Vector2(st1.texture!.width, st1.texture!.height)),
             st1,
             new Phoenix.UIRenderer(1)
         ))
 
         const st2 = new Phoenix.TextSprite("And particles!", {fontSize: 24, backgroundColor: "#7fefcf", padding: 8})
         app.addObject(app.createObject(
-            new Phoenix.Transform(new Phoenix.Vector2(0, 112), 0, new Phoenix.Vector2(st2.texture!.width / 3, st2.texture!.height / 3)),
+            new Phoenix.Transform(new Phoenix.Vector2(0, 72), 0, new Phoenix.Vector2(st2.texture!.width, st2.texture!.height)),
             st2,
             new Phoenix.UIRenderer(1)
         ))

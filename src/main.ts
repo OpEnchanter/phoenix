@@ -129,12 +129,12 @@ app.addFrameIntervalCallback(() => {
 
 
 app.addScene("0", new ImpulseComponentExample.Scene())
-app.addScene("2", new ControllableObjectExample.Scene())
+app.addScene("1", new ControllableObjectExample.Scene())
 
 app.loadScene("0")
 
 let cur = 0;
-let max = 2;
+let max = 1;
 
 document.addEventListener("keydown", (e) => {
     if (e.key.toLowerCase() == "h") {
