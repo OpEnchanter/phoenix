@@ -1,13 +1,13 @@
 # phoenix
 A 2D game framework made for browser-based video games designed to mimic some design paradigms of the Unity game engine. Using Bun + Typescript and bundled with Vite. Uses the [Planck.js](https://piqnt.github.io/planck.js/docs/body.html) physics engine and [THREE.js](https://threejs.org/) for rendering.
 
-This repository also includes some demo scenes showcasing the features that the engine provides. In theory, this engine also has the capability to be used in the creation of a full game! The demo can be found [here](https://openchanter.github.com/phoenix)
+This repository also includes some demo scenes showcasing the features that the engine provides. In theory, this engine also has the capability to be used in the creation of a full game! The demo can be found [here](https://openchanter.github.com/phoenix).
 
 > [!NOTE]
 > All of the currently implemented features are listed at the bottom of this README, but the TODOs and planned features for this project are in the [issues](https://github.com/OpEnchanter/phoenix/issues). Feel free to add an issue if there is any bug you notice or feature you would like to request!
 
 ## Installation
-The engine can really easily be added to a Bun project with one command!
+The engine can easily be added to a Bun project with one command!
 ```bash
 bun add github:openchanter/phoenix
 ```
@@ -19,7 +19,7 @@ import * as Phoenix from 'phoenix'
 
 Note that for the rest of these docs, any time the engine is imported, the import statement is formatted as if the engine is a local file in the app's `src` directory. This needs to be changed to the above import if installed via bun.
 
-## Usage
+## Getting started
 The entrypoint into the application must be loaded in a HTML document.
 In this example, the HTML provides a canvas element, styled to fit the screen properly and loads the Typescript entrypoint.
 
@@ -95,7 +95,7 @@ const app: Phoenix.App = new App();
 app.start();
 ```
 
-This script will create a basic app and start it but will not render anything. Note that there must be a `<canvas>` in the main HTML document.
+This script will create a basic app and start it but will not render anything.
 
 Some options can be supplied to the app upon loading it. See [ApplicationArguments](#applicationarguments)
 
@@ -118,30 +118,28 @@ app.addObject(app.createObject(
 
 This object has 3 completely empty components attached to it. This is a demonstration of how the components system works as the `Phoenix.Component()` class is designed to be extended to create custom behaviour.
 
-### Component
-Without components, objects do not render, have a sprite, or even have a position. Components are able to provide behaviour to objects through scripts. Components have multiple distinct functions that can be overridden to create the aforementioned behaviour.
+### Components
+Without components, objects do not render, have a sprite, or even have a position. Components are able to provide behavior to objects through scripts. Components have multiple distinct functions that can be overridden to create the aforementioned behavior.
 
 **Component Functions**
 
 `onInitialized()` - Called when the object loads, best for fetching data from other components or objects. Called once.
 
-`onDestroyed()` - Controls what the object does when it is removed from the app's objects array. Called once.
+`onDestroyed()` - Controls what the object does when it is removed from the scene. Called once.
 
 `onUpdate()` - Called every frame the object exists.
 
 `onLateUpdate()` - Called every frame the object exists after `onUpdate()` finishes for all objects in the scene.
 
-**Built-in Components**
-
 **Basic Components:**
 
 - `Phoenix.Transform(position: Vector2, rotation: number, scale: Vector2)` - Stores the position, rotation and scale of objects.
 
-- `Phoenix.Renderer(depth: number)` - Stores the object's rendering depth and adds the texture retrieved from the first `Sprite` on the object along with the transformation from the first `Transform` on the object and the depth stored to the app's rendering buffer. A smaller depth value causes the texture to render later, appearing in front of others.
+- `Phoenix.Renderer(depth: number, shaderOverride?: shaderOps)` - Stores the object's rendering depth and adds the texture retrieved from the first `Sprite` on the object along with the transformation from the first `Transform` on the object and the depth stored to the app's rendering buffer. A smaller depth value causes the texture to render later, appearing in front of others.
 
 - `Phoenix.Rigidbody(density: number, friction: number, isStatic: boolean)` - Allows physics and other physical properties such as friction to be added to objects. If `isStatic` is true the object will not move and not be affected by other physics objects.
 
-**Sprites**
+**Sprites:**
 
 - `Phoenix.Sprite(src: string)` - Stores an image texture used for the object by the renderer.
 
@@ -160,6 +158,11 @@ Without components, objects do not render, have a sprite, or even have a positio
 **Particles:**
 
 - `Phoenix.ParticleSystem(particleSprite: string, count: number, scale: Vector2)` - A particle system that will spawn in any number of efficiently instanced particles that shoot out of their emitter in random directions and fall due to gravity.
+
+**UI:**
+- `Phoenix.UIRenderer(depth: number, shaderOverride?: shaderOps)` - A renderer that works identically to the normal `Renderer` but renders objects in screen-space rather than world-space.
+
+- `Phoenix.Button(onClickCallback?: () => void, onHoverCallback?: () => void)` - A button that tracks hover and clicks. `onClickCallback` and `onHoverCallback` can be supplied to add custom functionality on hover and click.
 
 
 ### ApplicationArguments
@@ -217,47 +220,25 @@ const transform: Phoenix.Transformation = new Phoenix.Transformation(
     new Phoenix.Vector2(0, 0),
     0,
     new Phoenix.Vector2(0, 0)
-)
+);
 ```
 Creates a transform with position (0,0) rotation of 0deg and scale of 0x0.
 
----
+### Matrix
+A matrix of any size. Can be multiplied by another matrix.
+```typescript
+const a: Phoenix.Matrix = new Matrix([
+    [1, 2],
+    [3, 4]
+]);
 
-**Feature Checklist**
+const b: Phoenix.Matrix = new Matrix([
+    [5, 6],
+    [7, 8]
+]);
 
-- Main Application Class
-    - [x] Physics Initialization (planck.js)
-    - [x] Renderer Initialization (three.js)
-    - [x] Object Management (addition and removal)
-    - [x] Start and Stop running game
-    - [x] Timing (deltaTime)
-    - [x] Screen Space Shader & Shader Override
-    - [x] Keyboard Input Tracking
-    - [x] Mouse Input Tracking
-
-- Components
-    - [x] Component Parent Class
-    - [x] Transform
-    - [x] Renderer
-    - [x] Sprite
-    - [x] Rigidbody
-    - [x] Box Collider
-    - [x] Circle Collider
-    - [x] Camera
-    - [x] Sprites
-        - [x] Image Sprite
-        - [x] Canvas Sprite
-        - [x] Text Sprite
-        - [x] Animated Sprite
-
-- Objects
-    - [x] Initialization
-    - [x] Component Usage
-
-- Generics
-    - [x] Vector2
-    - [x] Logger
-    - [x] Transformation
+const c = a.multiply(b);
+```
 
 ---
 
