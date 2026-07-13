@@ -1094,7 +1094,7 @@ export class App {
         })
 
         this.screenSpaceScene.add(new THREE.Mesh(
-            new THREE.PlaneGeometry(HI_W * 3, HI_W * (9 / 16) * 3),
+            new THREE.PlaneGeometry(HI_W * 2, HI_W * (9 / 16) * 2),
 
             // Screen-space shader injection
             this.screenSpaceShader
@@ -1111,11 +1111,8 @@ export class App {
     }
 
     private resize() {
-        const xScaleFactor = Math.ceil(window.innerWidth / this.renderScale.x);
-        const yScaleFactor = Math.ceil(window.innerHeight / this.renderScale.y);
-
-        const w = this.renderScale.x * xScaleFactor; 
-        const h = this.renderScale.y * yScaleFactor;
+        const w = this.renderScale.x; 
+        const h = this.renderScale.y;
 
         this.camera.left = -w / 2 * this.args.zoom!;
         this.camera.right = w / 2 * this.args.zoom!;
