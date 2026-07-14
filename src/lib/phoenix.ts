@@ -1322,6 +1322,29 @@ export class App {
         })
         Logger.info("Resize handler loaded")
 
+        // Register input event handlers
+        document.addEventListener("keydown", (e) => {
+            this.keys[e.key.toLowerCase() as string] = true
+        });
+
+        document.addEventListener("keyup", (e) => {
+            this.keys[e.key.toLowerCase() as string] = false
+        });
+
+        document.addEventListener("mousemove", (e) => {
+            this.mousePos.x = e.clientX - (window.innerWidth / 2);
+            this.mousePos.y = -e.clientY + (window.innerHeight / 2);
+        })
+
+        document.addEventListener("mousedown", (e) => {
+            this.mouseDown = true;
+        })
+
+        document.addEventListener("mouseup", (e) => {
+            this.mouseDown = false;
+        })
+        Logger.info("Input event listeners loaded")
+
         Logger.success("Loading success")
     }
 
@@ -1367,28 +1390,6 @@ export class App {
 
         this.camera.position.setX(0);
         this.camera.position.setY(0);
-
-        // Register input event handlers
-        document.addEventListener("keydown", (e) => {
-            this.keys[e.key.toLowerCase() as string] = true
-        });
-
-        document.addEventListener("keyup", (e) => {
-            this.keys[e.key.toLowerCase() as string] = false
-        });
-
-        document.addEventListener("mousemove", (e) => {
-            this.mousePos.x = e.clientX - (window.innerWidth / 2);
-            this.mousePos.y = -e.clientY + (window.innerHeight / 2);
-        })
-
-        document.addEventListener("mousedown", (e) => {
-            this.mouseDown = true;
-        })
-
-        document.addEventListener("mouseup", (e) => {
-            this.mouseDown = false;
-        })
 
         // Begin measuring deltaTime
         this.oldTimestamp = Date.now();
