@@ -470,8 +470,21 @@ export class Renderer extends Component {
         if (!this.sprite) return
 
         const texture = this.sprite.texture;
+        texture!.wrapS = THREE.RepeatWrapping;
+        texture!.wrapT = THREE.RepeatWrapping;
 
-        const geo = new THREE.PlaneGeometry(this.transform?.scale.x, this.transform?.scale.y)
+        texture?.repeat.set(
+            Math.sign(this.transform!.scale.x), 
+            Math.sign(this.transform!.scale.y)
+        );
+
+        texture?.offset.set(
+            Math.max(0, Math.sign(this.transform!.scale.x)),
+            Math.max(0, Math.sign(this.transform!.scale.y))
+        );
+
+        const geo = new THREE.PlaneGeometry(Math.abs(this.transform!.scale.x), Math.abs(this.transform!.scale.y))
+
 
         this.mesh = new THREE.Mesh(
             geo,
@@ -510,6 +523,16 @@ export class Renderer extends Component {
         if (this.sprite?.texture !== mat.uniforms.uTex!.value) {
             mat.uniforms.uTex!.value = this.sprite!.texture
         }
+
+        mat.uniforms.uTex!.value?.repeat.set(
+            Math.sign(this.transform!.scale.x), 
+            Math.sign(this.transform!.scale.y)
+        );
+
+        mat.uniforms.uTex!.value?.offset.set(
+            Math.max(0, Math.sign(this.transform!.scale.x)),
+            Math.max(0, Math.sign(this.transform!.scale.y))
+        );
 
         this.mesh.rotation.set(
             0, 0,
