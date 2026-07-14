@@ -525,8 +525,8 @@ export class Renderer extends Component {
         );
 
         this.mesh.rotation.set(
-            transformation.scale.y < 0 ? 180 : 0,
-            transformation.scale.x < 0 ? 180 : 0,
+            transformation.scale.y < 0 ? Math.PI : 0,
+            transformation.scale.x < 0 ? Math.PI : 0,
             transformation.rotation * (Math.PI / 180)
         )
     }
