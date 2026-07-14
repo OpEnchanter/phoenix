@@ -1420,7 +1420,8 @@ export class App {
             this.oldTimestamp = Date.now();
 
             if (this.sceneLoadName !== undefined) {
-                this.loadScene(this.sceneLoadName)
+                this.loadScene(this.sceneLoadName);
+                this.sceneLoadName = undefined;
             }
         })
     }
