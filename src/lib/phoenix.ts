@@ -606,6 +606,7 @@ export class BoxCollider extends Component {
     scale: Vector2;
     isTrigger: boolean;
     body: pl.Body | undefined;
+    fixture: pl.Fixture | undefined;
     offset: Vector2;
     constructor (scale: Vector2, isTrigger?: boolean, offset?: Vector2) {
         super();
@@ -618,7 +619,7 @@ export class BoxCollider extends Component {
         for (let edge = this.body?.getContactList(); edge; edge = edge.next) {
             const contact = edge.contact;
 
-            if (contact.isTouching()) {
+            if (contact.isTouching() && contact.getFixtureA() === this.fixture) {
                 if (this.isTrigger) {
                     this.parent!.isTriggered = true;
                 } else {
@@ -633,6 +634,7 @@ export class CircleCollider extends Component {
     radius: number;
     isTrigger: boolean;
     body: pl.Body | undefined;
+    fixture: pl.Fixture | undefined;
     offset: Vector2;
     constructor (radius: number, isTrigger?: boolean, offset?: Vector2) {
         super();
@@ -645,7 +647,7 @@ export class CircleCollider extends Component {
         for (let edge = this.body?.getContactList(); edge; edge = edge.next) {
             const contact = edge.contact;
 
-            if (contact.isTouching()) {
+            if (contact.isTouching() && contact.getFixtureA() === this.fixture) {
                 if (this.isTrigger) {
                     this.parent!.isTriggered = true;
                 } else {
@@ -1018,6 +1020,7 @@ export class GameObject {
             fixture.setSensor(b.isTrigger);
 
             b.body = body;
+            b.fixture = fixture;
         }
         const circleColliders = this.getComponents(CircleCollider);
         for (const c of circleColliders) {
@@ -1028,6 +1031,7 @@ export class GameObject {
             fixture.setSensor(c.isTrigger);
 
             c.body = body;
+            c.fixture = fixture;
         }
 
         body.resetMassData();
