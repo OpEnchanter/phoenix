@@ -1419,7 +1419,7 @@ export class App {
             this.deltaTime = (Date.now() - this.oldTimestamp) * this.args.timescale!;
             this.oldTimestamp = Date.now();
 
-            if (this.sceneLoadName !== undefined) {
+            if (this.sceneLoadName != undefined) {
                 this.loadScene(this.sceneLoadName);
                 this.sceneLoadName = undefined;
             }
