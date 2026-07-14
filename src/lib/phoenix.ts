@@ -1237,6 +1237,8 @@ export class App {
     objects: Array<GameObject> = [];
     sceneGraphRoot: SceneGraphRoot = new SceneGraphRoot(this);
 
+    sceneLoadName: string | undefined;
+
     constructor (args: ApplicationArguments) {
 
         const defaultArgs: ApplicationArguments = {
@@ -1416,6 +1418,10 @@ export class App {
 
             this.deltaTime = (Date.now() - this.oldTimestamp) * this.args.timescale!;
             this.oldTimestamp = Date.now();
+
+            if (this.sceneLoadName !== undefined) {
+                this.loadScene(this.sceneLoadName)
+            }
         })
     }
 
@@ -1480,19 +1486,19 @@ export class App {
         this.scenes[name] = scene;
     }
 
-    public loadScene(name: string) {
+    private initiateSceneLoad(name: string) {
         if (!Object.keys(this.scenes).includes(name)) {
             Logger.error(`Scene, ${name} not found`)
             return
         }
 
-        Logger.info(`Loading scene ${name}`)
-
-        this.curScene = name;
-
         if (this.isTicking) {
             this.stop();
         }
+
+        Logger.info(`Loading scene ${name}`)
+
+        this.curScene = name;
 
         for (const o of this.sceneGraphRoot.children) {
             o.onDestroyed();
@@ -1502,6 +1508,14 @@ export class App {
         this.scenes[name]!.onLoad(this);
 
         this.start();
+    }
+
+    public loadScene(name: string) {
+        if (this.isTicking) {
+            this.sceneLoadName = name;
+        } else {
+            this.initiateSceneLoad(name);
+        }
     }
 
     public getScene() {
