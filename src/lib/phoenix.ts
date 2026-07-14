@@ -428,6 +428,10 @@ export class AnimatedSprite extends Sprite {
         }
     }
 
+    public setAnimation(name: string) {
+        this.currentAnimation = Object.keys(this.frameTextures)[0]!.includes(name) ? name : this.currentAnimation;
+    }
+
     override onUpdate () {
         // Update sprite
         this.texture = this.frameTextures[this.currentAnimation]![Math.floor(this.t / this.rate) % this.frameTextures[this.currentAnimation]!.length];
