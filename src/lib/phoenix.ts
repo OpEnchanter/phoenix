@@ -548,8 +548,8 @@ export class InstancedRenderer extends Component {
             const transformationMatrix = new THREE.Matrix4();
             transformationMatrix.compose(
                 new THREE.Vector3(
-                    position.x,
-                    position.y,
+                    position.x + this.transform.position.x,
+                    position.y + this.transform.position.y,
                     2
                 ),
                 new THREE.Quaternion(),
