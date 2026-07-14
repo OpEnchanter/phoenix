@@ -473,17 +473,6 @@ export class Renderer extends Component {
         texture!.wrapS = THREE.RepeatWrapping;
         texture!.wrapT = THREE.RepeatWrapping;
 
-        const scaleX = Math.sign(this.transform!.scale.x)
-        const scaleY = Math.sign(this.transform!.scale.y)
-
-        texture?.repeat.set(scaleX, scaleY);
-        texture?.offset.set(
-            scaleX < 0 ? 1 : 0,
-            scaleY < 0 ? 1 : 0
-        )
-
-        texture!.needsUpdate = true;
-
         const geo = new THREE.PlaneGeometry(Math.abs(this.transform!.scale.x), Math.abs(this.transform!.scale.y))
 
 
@@ -536,7 +525,8 @@ export class Renderer extends Component {
         );
 
         this.mesh.rotation.set(
-            0, 0,
+            transformation.scale.y < 0 ? 180 : 0,
+            transformation.scale.x < 0 ? 180 : 0,
             transformation.rotation * (Math.PI / 180)
         )
     }
