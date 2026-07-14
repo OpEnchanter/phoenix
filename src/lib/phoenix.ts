@@ -413,9 +413,9 @@ export class AnimatedSprite extends Sprite {
     currentAnimation: string = "";
 
     constructor(animations: Record<string, Array<string>>, rate?: number) {
-        if (frames.length == 0) { super("CANVAS"); return; }
-
         const firstAnimName = Object.keys(animations)[0]!;
+        if (animations[firstAnimName]!.length == 0) { super("CANVAS"); return; }
+
         const firstFrame = animations[firstAnimName]?.[0]
 
         if (!firstFrame) return

@@ -68,7 +68,7 @@ export class Scene extends Phoenix.Scene {
 
         app.addObject(app.createObject(
             new Phoenix.Transform(new Phoenix.Vector2(164, 32), 0, new Phoenix.Vector2(64, 64)),
-            new Phoenix.AnimatedSprite(["assets/brick.png", "assets/null.png"]),
+            new Phoenix.AnimatedSprite({"main":["assets/brick.png", "assets/null.png"]}),
             new Phoenix.UIRenderer(1)
         ))
 
