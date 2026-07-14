@@ -414,17 +414,22 @@ export class AnimatedSprite extends Sprite {
 
     constructor(animations: Record<string, Array<string>>, rate?: number) {
         if (frames.length == 0) { super("CANVAS"); return; }
-        super(animations[Object.keys(animations)[0]!]![0]!);
 
-        this.currentAnimation = Object.keys(animations)[0]!;
+        const firstAnimName = Object.keys(animations)[0]!;
+        const firstFrame = animations[firstAnimName]?.[0]
 
+        if (!firstFrame) return
+        super(firstFrame);
+
+        this.currentAnimation = firstAnimName;
         this.rate = rate ?? 15
         
         for (const animName of Object.keys(animations)) {
-            this.frameTextures[animName] = [];
+            const frameTextures: THREE.Texture[] = [];
             for (const f of animations[animName]!) {
-                this.frameTextures[animName].push(this.loadTexture(f));
+                frameTextures.push(this.loadTexture(f));
             }
+            this.frameTextures[animName] = frameTextures;
         }
     }
 
