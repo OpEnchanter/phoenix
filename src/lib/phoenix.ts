@@ -1403,6 +1403,13 @@ export class App {
 
         // Begin frame loop
         this.renderer.setAnimationLoop(() => {
+            if (this.sceneLoadName != undefined) {
+                setTimeout(() => {
+                    this.initiateSceneLoad(this.sceneLoadName!);
+                    this.sceneLoadName = undefined;
+                }, 0)
+            }
+
             this.plWorld.step(this.deltaTime / 1000, 10, 6);
             this.update();
 
@@ -1418,11 +1425,6 @@ export class App {
 
             this.deltaTime = (Date.now() - this.oldTimestamp) * this.args.timescale!;
             this.oldTimestamp = Date.now();
-
-            if (this.sceneLoadName != undefined) {
-                this.initiateSceneLoad(this.sceneLoadName);
-                this.sceneLoadName = undefined;
-            }
         })
     }
 
