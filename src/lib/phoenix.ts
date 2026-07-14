@@ -406,24 +406,31 @@ export type Animation = {
 };
 
 export class AnimatedSprite extends Sprite {
-    frameTextures: Array<THREE.Texture> = [];
+    frameTextures: Record<string, Array<THREE.Texture>> = {};
     t: number = 0;
     rate: number = 60;
 
-    constructor(frames: Array<string>, rate?: number) {
+    currentAnimation: string = "";
+
+    constructor(animations: Record<string, Array<string>>, rate?: number) {
         if (frames.length == 0) { super("CANVAS"); return; }
-        super(frames[0]!);
+        super(animations[Object.keys(animations)[0]!]![0]!);
+
+        this.currentAnimation = Object.keys(animations)[0]!;
 
         this.rate = rate ? rate : 15
         
-        for (const f of frames) {
-            this.frameTextures.push(this.loadTexture(f));
+        for (const animName of Object.keys(animations)[0]!) {
+            this.frameTextures[animName] = [];
+            for (const f of animations[animName]!) {
+                this.frameTextures[animName].push(this.loadTexture(f));
+            }
         }
     }
 
     override onUpdate () {
         // Update sprite
-        this.texture = this.frameTextures[Math.floor(this.t / this.rate)  % this.frameTextures.length];
+        this.texture = this.frameTextures[this.currentAnimation]![Math.floor(this.t / this.rate) % this.frameTextures[this.currentAnimation]!.length];
         this.t++;
     }
 }
