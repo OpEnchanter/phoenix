@@ -475,7 +475,6 @@ export class Renderer extends Component {
 
         const geo = new THREE.PlaneGeometry(Math.abs(this.transform!.scale.x), Math.abs(this.transform!.scale.y))
 
-
         this.mesh = new THREE.Mesh(
             geo,
             new THREE.ShaderMaterial({
@@ -486,8 +485,9 @@ export class Renderer extends Component {
                     uTex: { value: texture},
                     ...this.shader.uniforms
                 },
-                transparent: true
-            })
+                transparent: true,
+                side: THREE.DoubleSide
+            }),
         )
 
         this.parent.app.renderScene.add(this.mesh)
