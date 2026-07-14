@@ -420,7 +420,7 @@ export class AnimatedSprite extends Sprite {
 
         this.rate = rate ? rate : 15
         
-        for (const animName of Object.keys(animations)[0]!) {
+        for (const animName of Object.keys(animations)) {
             this.frameTextures[animName] = [];
             for (const f of animations[animName]!) {
                 this.frameTextures[animName].push(this.loadTexture(f));
