@@ -473,15 +473,19 @@ export class Renderer extends Component {
         texture!.wrapS = THREE.RepeatWrapping;
         texture!.wrapT = THREE.RepeatWrapping;
 
-        texture?.repeat.set(
-            Math.sign(this.transform!.scale.x), 
-            Math.sign(this.transform!.scale.y)
-        );
+        texture!.matrixAutoUpdate = false;
 
-        texture?.offset.set(
-            Math.max(0, Math.sign(this.transform!.scale.x)),
-            Math.max(0, Math.sign(this.transform!.scale.y))
-        );
+        const scaleX = Math.sign(this.transform!.scale.x)
+        const scaleY = Math.sign(this.transform!.scale.y)
+
+        texture?.matrix.setUvTransform(
+            scaleX < 0 ? 1 : 0,
+            scaleY < 0 ? 1 : 0,
+            scaleX,
+            scaleY,
+            0,
+            0, 0
+        )
 
         const geo = new THREE.PlaneGeometry(Math.abs(this.transform!.scale.x), Math.abs(this.transform!.scale.y))
 
