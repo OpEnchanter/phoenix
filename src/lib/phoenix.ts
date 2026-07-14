@@ -434,7 +434,7 @@ export class AnimatedSprite extends Sprite {
     }
 
     public setAnimation(name: string) {
-        this.currentAnimation = Object.keys(this.frameTextures)[0]!.includes(name) ? name : this.currentAnimation;
+        this.currentAnimation = Object.keys(this.frameTextures).includes(name) ? name : this.currentAnimation;
     }
 
     override onUpdate () {
