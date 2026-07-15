@@ -1014,7 +1014,7 @@ export class GameObject {
         const boxColliders = this.getComponents(BoxCollider);
         for (const b of boxColliders) {
             const fixture = body.createFixture({
-                shape: pl.Box(b.scale.x/128, b.scale.y/128, pl.Vec2(b.offset.x/64, b.offset.y/64)),
+                shape: pl.Box(b.scale.x/64, b.scale.y/64, pl.Vec2(b.offset.x/32, b.offset.y/32)),
                 ...(rb && {density: rb.density, friction: rb.friction})
             });
             fixture.setSensor(b.isTrigger);
@@ -1025,7 +1025,7 @@ export class GameObject {
         const circleColliders = this.getComponents(CircleCollider);
         for (const c of circleColliders) {
             const fixture = body.createFixture({
-                shape: pl.Circle(pl.Vec2(c.offset.x/64, c.offset.y/64), c.radius / 64),
+                shape: pl.Circle(pl.Vec2(c.offset.x/32, c.offset.y/32), c.radius / 64),
                 ...(rb && {density: rb.density, friction: rb.friction})
             })
             fixture.setSensor(c.isTrigger);
