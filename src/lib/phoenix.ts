@@ -1025,7 +1025,7 @@ export class GameObject {
         const circleColliders = this.getComponents(CircleCollider);
         for (const c of circleColliders) {
             const fixture = body.createFixture({
-                shape: pl.Circle(pl.Vec2(c.offset.x/32, c.offset.y/32), c.radius / 64),
+                shape: pl.Circle(pl.Vec2(c.offset.x/32, c.offset.y/32), c.radius / 32),
                 ...(rb && {density: rb.density, friction: rb.friction})
             })
             fixture.setSensor(c.isTrigger);
