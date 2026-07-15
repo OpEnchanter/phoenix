@@ -942,7 +942,7 @@ export class Button extends Component {
 
         this.isHovered = 
             (mousePos.x > pos.x - (scale.x / 2)) && (mousePos.x < pos.x + (scale.x / 2)) && // X-Axis
-            (mousePos.y > pos.y - (scale.y / 2)) && (mousePos.y < pos.y + (scale.x / 2)) // Y-Axis
+            (mousePos.y > pos.y - (scale.y / 2)) && (mousePos.y < pos.y + (scale.y / 2)) // Y-Axis
 
         this.isPressed = this.isHovered && this.parent!.app.getMouseDown();
 
