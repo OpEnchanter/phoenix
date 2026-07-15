@@ -921,9 +921,9 @@ export class Button extends Component {
     transform: Transform | undefined;
 
     onClick: () => void = () => {};
-    onHover: () => void = () => {};
+    onHover: (isHovered: boolean) => void = (isHovered: boolean) => {};
 
-    constructor(onClickCallback?: () => void, onHoverCallback?: () => void) {
+    constructor(onClickCallback?: () => void, onHoverCallback?: (isHovered: boolean) => void) {
         super();
         this.onClick = onClickCallback ? onClickCallback : this.onClick;
         this.onHover = onHoverCallback ? onHoverCallback : this.onHover;
@@ -951,11 +951,8 @@ export class Button extends Component {
         }
 
         if (this.isHovered) {
-            this.onHover();
-
+            this.onHover(this.isHovered);
             document.body.style.cursor = "pointer";
-        } else {
-            document.body.style.cursor = "default";
         }
 
         this.isPressedOld = this.isPressed;
@@ -1413,6 +1410,8 @@ export class App {
                     this.sceneLoadName = undefined;
                 }, 0)
             }
+            
+            document.body.style.cursor = "default";
 
             this.plWorld.step(this.deltaTime / 1000, 10, 6);
             this.update();
