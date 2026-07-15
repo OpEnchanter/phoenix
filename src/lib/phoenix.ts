@@ -950,8 +950,8 @@ export class Button extends Component {
             this.onClick();
         }
 
+        this.onHover(this.isHovered);
         if (this.isHovered) {
-            this.onHover(this.isHovered);
             document.body.style.cursor = "pointer";
         }
 
@@ -1410,7 +1410,7 @@ export class App {
                     this.sceneLoadName = undefined;
                 }, 0)
             }
-            
+
             document.body.style.cursor = "default";
 
             this.plWorld.step(this.deltaTime / 1000, 10, 6);
