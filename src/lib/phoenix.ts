@@ -357,6 +357,7 @@ type fontOps = {
     fontColor?: string,
     backgroundColor?: string,
     padding?: number
+    borderRadius?: number
 }
 
 const defaultFont: fontOps = {
@@ -364,7 +365,8 @@ const defaultFont: fontOps = {
     fontFamily: "serif",
     fontColor: "black",
     backgroundColor: "transparent",
-    padding: 0
+    padding: 0,
+    borderRadius: 0
 }
 
 export class TextSprite extends Sprite {
@@ -388,7 +390,9 @@ export class TextSprite extends Sprite {
         
         ctx!.clearRect(0, 0, canvas.width, canvas.height);
         ctx!.fillStyle = font.backgroundColor!;
-        ctx!.fillRect(0, 0, canvas.width, canvas.height);
+        ctx?.beginPath()
+        ctx?.roundRect(0, 0, canvas.width, canvas.height, font.borderRadius)
+        ctx?.fill()
         ctx!.fillStyle = font.fontColor!;
         ctx!.fillText(text, font.padding!, font.padding! + font.fontSize!);
 
