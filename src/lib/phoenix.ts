@@ -1014,7 +1014,7 @@ export class GameObject {
         const boxColliders = this.getComponents(BoxCollider);
         for (const b of boxColliders) {
             const fixture = body.createFixture({
-                shape: pl.Box(b.scale.x/64, b.scale.y/64, pl.Vec2(b.offset.x/64, b.offset.y/64)),
+                shape: pl.Box(b.scale.x/128, b.scale.y/128, pl.Vec2(b.offset.x/64, b.offset.y/64)),
                 ...(rb && {density: rb.density, friction: rb.friction})
             });
             fixture.setSensor(b.isTrigger);
