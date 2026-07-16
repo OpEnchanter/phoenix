@@ -357,7 +357,9 @@ type fontOps = {
     fontColor?: string,
     backgroundColor?: string,
     padding?: number
-    borderRadius?: number
+    borderRadius?: number,
+    backgroundWidth?: number | undefined,
+    backgroundHeight?: number | undefined
 }
 
 const defaultFont: fontOps = {
@@ -366,7 +368,9 @@ const defaultFont: fontOps = {
     fontColor: "black",
     backgroundColor: "transparent",
     padding: 0,
-    borderRadius: 0
+    borderRadius: 0,
+    backgroundWidth: undefined,
+    backgroundHeight: undefined
 }
 
 export class TextSprite extends Sprite {
@@ -383,8 +387,8 @@ export class TextSprite extends Sprite {
 
         const textMeasurements = ctx!.measureText(text);
 
-        canvas.width = textMeasurements.width + (font.padding! * 2);
-        canvas.height = font.fontSize! + (font.padding! * 2);
+        canvas.width = font.backgroundWidth ?? textMeasurements.width + (font.padding! * 2);
+        canvas.height = font.backgroundHeight ?? font.fontSize! + (font.padding! * 2);
 
         ctx!.font = `${font.fontSize}px ${font.fontFamily}`;
         
