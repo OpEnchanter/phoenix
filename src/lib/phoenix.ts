@@ -913,8 +913,8 @@ export class UIRenderer extends Component {
         )
 
         this.mesh?.scale.set(
-            this.mesh.scale.x / this.initialScale!.x,
-            this.mesh.scale.y / this.initialScale!.y,
+            this.transform.scale.x / this.initialScale!.x,
+            this.transform.scale.y / this.initialScale!.y,
             1
         )
 
