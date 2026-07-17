@@ -876,7 +876,7 @@ export class UIRenderer extends Component {
 
         if (!this.transform || !this.sprite) return;
 
-        this.initialScale = this.transform.scale;
+        this.initialScale = new Vector2(this.transform.scale.x, this.transform.scale.y);
 
         const geo = new THREE.PlaneGeometry(this.transform.scale.x, this.transform.scale.y);
         const tex = this.sprite.texture;
