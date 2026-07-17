@@ -856,6 +856,8 @@ export class UIRenderer extends Component {
 
     mesh: THREE.Mesh | undefined;
 
+    initialScale: Vector2 | undefined;
+
     constructor(depth: number, shaderOverride?: shaderOps) {
         super();
         this.depth = depth;
@@ -873,6 +875,8 @@ export class UIRenderer extends Component {
         this.sprite = this.parent?.getComponent(Sprite);
 
         if (!this.transform || !this.sprite) return;
+
+        this.initialScale = this.transform.scale;
 
         const geo = new THREE.PlaneGeometry(this.transform.scale.x, this.transform.scale.y);
         const tex = this.sprite.texture;
@@ -906,6 +910,12 @@ export class UIRenderer extends Component {
             this.transform.globalPosition.x,
             this.transform.globalPosition.y,
             this.depth
+        )
+
+        this.mesh?.scale.set(
+            this.mesh.scale.x / this.initialScale!.x,
+            this.mesh.scale.y / this.initialScale!.y,
+            1
         )
 
         const mat = (this.mesh!.material as THREE.ShaderMaterial);
