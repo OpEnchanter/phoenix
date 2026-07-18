@@ -857,6 +857,7 @@ export class UIRenderer extends Component {
     mesh: THREE.Mesh | undefined;
 
     initialScale: Vector2 | undefined;
+    initialMeshScale: Vector2 | undefined;
 
     constructor(depth: number, shaderOverride?: shaderOps) {
         super();
@@ -895,6 +896,8 @@ export class UIRenderer extends Component {
 
         this.mesh = new THREE.Mesh(geo, mat);
 
+        this.initialMeshScale = new Vector2(this.mesh.scale.x, this.mesh.scale.y);
+
         this.parent?.app.screenSpaceScene.add(this.mesh);
     }
 
@@ -913,8 +916,8 @@ export class UIRenderer extends Component {
         )
 
         this.mesh?.scale.set(
-            this.transform.scale.x / this.initialScale!.x, 
-            this.transform.scale.y / this.initialScale!.y, 
+            (this.transform.scale.x / this.initialScale!.x) * this.initialMeshScale!.x, 
+            (this.transform.scale.y / this.initialScale!.y) * this.initialMeshScale!.y, 
             1
         )
 
