@@ -1202,7 +1202,7 @@ export class Scene {
 
 type ApplicationArguments = {
     zoom?: number,
-    renderScale?: Vector2,
+    renderScale?: number,
     shaderOverride?: shaderOps,
     clearColor?: number,
     timescale?: number
@@ -1241,10 +1241,9 @@ export class App {
     screenSpaceScene: THREE.Scene;
     screenSpaceCamera: THREE.OrthographicCamera;
     screenSpaceShader: THREE.ShaderMaterial;
+    screenSpacePlane: THREE.Mesh;
 
     renderTarget: THREE.WebGLRenderTarget;
-
-    renderScale: Vector2 = new Vector2(2560, 1440);
 
     public deltaTime: number = 0;
 
@@ -1261,11 +1260,14 @@ export class App {
 
     sceneLoadName: string | undefined;
 
+    oldLowWidth = 0;
+    oldLowHeight = 0;
+
     constructor (args: ApplicationArguments) {
 
         const defaultArgs: ApplicationArguments = {
             zoom: 1,
-            renderScale: new Vector2(1920, 1080),
+            renderScale: 1,
             shaderOverride: defaultScreenShader,
             clearColor: THREE.Color.NAMES.black,
             timescale: 1
@@ -1279,7 +1281,8 @@ export class App {
 
 
         // Rendering
-        const LOW_W = this.args.renderScale!.x; const LOW_H = this.args.renderScale!.y
+        const LOW_W = window.innerWidth * this.args.renderScale!; const LOW_H = window.innerHeight * this.args.renderScale!;
+        this.oldLowWidth = LOW_W; this.oldLowHeight = LOW_H;
         this.renderTarget = new THREE.WebGLRenderTarget(LOW_W, LOW_H, {
             magFilter: THREE.NearestFilter,
             minFilter: THREE.NearestFilter,
@@ -1309,10 +1312,8 @@ export class App {
         const HI_W = window.innerWidth; const HI_H = window.innerHeight;
 
         this.screenSpaceCamera = new THREE.OrthographicCamera(
-            -HI_W / 2, 
-            HI_W / 2, 
-            HI_H / 2, 
-            -HI_H / 2, 
+            -HI_W / 2, HI_W / 2, 
+            HI_H / 2, -HI_H / 2, 
             0.1, 100);
             
         this.screenSpaceCamera.position.set(0, 0, 10);
@@ -1332,12 +1333,14 @@ export class App {
             fragmentShader: this.args.shaderOverride ? this.args.shaderOverride.fragmentShader : defaultShader.fragmentShader
         })
 
-        this.screenSpaceScene.add(new THREE.Mesh(
-            new THREE.PlaneGeometry(HI_H * (16 / 9), HI_H),
+        this.screenSpacePlane = new THREE.Mesh(
+            new THREE.PlaneGeometry(HI_W, HI_H),
 
             // Screen-space shader injection
             this.screenSpaceShader
-        ))
+        )
+
+        this.screenSpaceScene.add(this.screenSpacePlane)
 
         // Window resize handler
         this.resize();
@@ -1373,17 +1376,34 @@ export class App {
     }
 
     private resize() {
-        const w = this.renderScale.x; 
-        const h = this.renderScale.y;
 
-        this.camera.left = -w / 2 * this.args.zoom!;
-        this.camera.right = w / 2 * this.args.zoom!;
-
-        this.camera.top = h / 2 * this.args.zoom!;
-        this.camera.bottom = -h / 2 * this.args.zoom!;
-        this.camera.updateProjectionMatrix();
+        // Resize scene renderer
+        const w = window.innerWidth * this.args.renderScale!; 
+        const h = window.innerHeight * this.args.renderScale!;
 
         const HI_W = window.innerWidth; const HI_H = window.innerHeight;
+
+        this.camera.left = -HI_W / 2 * this.args.zoom!;
+        this.camera.right = HI_W / 2 * this.args.zoom!;
+
+        this.camera.top = HI_H / 2 * this.args.zoom!;
+        this.camera.bottom = -HI_H / 2 * this.args.zoom!;
+        this.camera.updateProjectionMatrix();
+
+        (this.screenSpacePlane as THREE.Mesh).geometry.scale(
+            w / this.oldLowWidth,
+            h / this.oldLowHeight,
+            1
+        )
+
+        this.oldLowWidth = w;
+        this.oldLowHeight = h;
+
+        // Resize render target
+        this.renderTarget.setSize(w, h)
+        this.renderTarget.depthTexture
+
+        // Resize screen renderer
         this.renderer.setSize(HI_W, HI_H);
 
         this.screenSpaceCamera.left = -HI_W / 2;

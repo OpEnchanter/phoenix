@@ -56,14 +56,17 @@ const LitShader = `
                 }
             }
 
-            float d = length(lightRay / uLightScale);
+            float d = length(vec2(rayPx.x / 512.0, rayPx.y / 512.0));
             float lightAffectAmount = 1.0 - clamp(d, 0.5, 1.0);
-            p1.rgb += occlusionFactor * lightAffectAmount * uLightColors[l];
+            p1.rgb += occlusionFactor * lightAffectAmount * (texture(uTex, fragTexCoord).rgb * uLightColors[l]);
         }
 
-        const float UNLIT_BRIGHTNESS = 1.0;
+        const float UNLIT_BRIGHTNESS = 0.7;
 
         p1 += texture(uTex, fragTexCoord) * UNLIT_BRIGHTNESS;
+
+        vec3 bcol = texture(uTex, fragTexCoord).rgb;
+        p1.rgb = vec3(min(p1.r, bcol.r),min(p1.g, bcol.g),min(p1.b, bcol.b));
         
         fragColor = linearToSRGB(p1);
     }
@@ -75,20 +78,20 @@ let lightPositions = [
 ]
 
 let lightScales = [
-    new THREE.Vector2(512, 512), 
+    new THREE.Vector2(512.0, 512.0), 
     new THREE.Vector2(512, 512)
 ]
 
 let lightColors = [
-    new THREE.Vector3(0.9,0.9,0.9), 
+    new THREE.Vector3(1.0, 1.0, 1.0), 
     new THREE.Vector3(1.0,0.0,0)
 ]
 
 const rScale = new Phoenix.Vector2(2560, 1440)
 
 const app: Phoenix.App = new Phoenix.App({
-    zoom: 1/1,
-    renderScale: rScale,
+    zoom: 1,
+    renderScale: 1,
     clearColor: 0x5cdbfd,
     timescale: 1,
     shaderOverride: {
