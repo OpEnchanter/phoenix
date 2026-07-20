@@ -507,7 +507,8 @@ export class Renderer extends Component {
                 vertexShader: this.shader.vertexShader,
                 fragmentShader: this.shader.fragmentShader,
                 uniforms: {
-                    uTex: { value: texture},
+                    uTex: { value: texture,},
+                    time: { value: this.parent.app.time },
                     ...this.shader.uniforms
                 },
                 transparent: true,
@@ -1286,6 +1287,8 @@ export class App {
     oldLowWidth = 0;
     oldLowHeight = 0;
 
+    time: number = 0;
+
     constructor (args: ApplicationArguments) {
 
         const defaultArgs: ApplicationArguments = {
@@ -1492,6 +1495,8 @@ export class App {
 
             this.deltaTime = (Date.now() - this.oldTimestamp) * this.args.timescale!;
             this.oldTimestamp = Date.now();
+            
+            this.time++;
         })
     }
 
