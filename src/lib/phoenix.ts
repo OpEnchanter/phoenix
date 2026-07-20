@@ -565,7 +565,7 @@ export class InstancedRenderer extends Component {
         this.sprite = this.parent?.getComponent(Sprite);
         if (!this.transform || !this.sprite) return;
 
-        // Create BatchedMesh with texture and count of objects
+        // Create InstancedMesh with texture and count of objects
         const geo = new THREE.PlaneGeometry(this.scale.x, this.scale.y);
         const texture = this.sprite.texture;
         const material = new THREE.ShaderMaterial({
