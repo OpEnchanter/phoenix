@@ -342,10 +342,16 @@ export class Sprite extends Component {
 }
 
 export class CanvasSprite extends Sprite {
+
+    canvas: HTMLCanvasElement;
+
     constructor (canvas: HTMLCanvasElement) {
         super("CANVAS");
 
-        this.texture = new THREE.CanvasTexture(canvas);
+        this.canvas = canvas;
+
+        this.texture = new THREE.CanvasTexture(this.canvas);
+
         this.texture.minFilter = THREE.NearestFilter;
         this.texture.magFilter = THREE.NearestFilter;
     }
