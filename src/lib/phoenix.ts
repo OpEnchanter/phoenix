@@ -349,6 +349,10 @@ export class CanvasSprite extends Sprite {
         this.texture.minFilter = THREE.NearestFilter;
         this.texture.magFilter = THREE.NearestFilter;
     }
+
+    public update() {
+        this.texture!.needsUpdate = true;
+    }
 }
 
 type fontOps = {
