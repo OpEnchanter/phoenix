@@ -560,7 +560,9 @@ export class Renderer extends Component {
             transformation.scale.y < 0 ? Math.PI : 0,
             transformation.scale.x < 0 ? Math.PI : 0,
             transformation.rotation * (Math.PI / 180)
-        )
+        );
+
+        (this.mesh.material as THREE.ShaderMaterial).uniforms.time!.value = this.parent.app.time;
     }
 }
 
