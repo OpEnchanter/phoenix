@@ -458,6 +458,8 @@ export class Renderer extends Component {
 
     mesh: THREE.Mesh | undefined = undefined;
 
+    initialScale: Vector2 | undefined;
+
     shader: shaderOps = defaultShader;
 
     depth: number;
@@ -482,6 +484,11 @@ export class Renderer extends Component {
         texture!.wrapT = THREE.RepeatWrapping;
 
         const geo = new THREE.PlaneGeometry(Math.abs(this.transform!.scale.x), Math.abs(this.transform!.scale.y))
+
+        this.initialScale = new Vector2(
+            texture!.width,
+            texture!.height
+        );  
 
         this.mesh = new THREE.Mesh(
             geo,
@@ -521,6 +528,12 @@ export class Renderer extends Component {
         if (this.sprite?.texture !== mat.uniforms.uTex!.value) {
             mat.uniforms.uTex!.value = this.sprite!.texture
         }
+
+        this.mesh?.scale.set(
+            (this.transform.scale.x / this.initialScale!.x), 
+            (this.transform.scale.y / this.initialScale!.y), 
+            1
+        )
 
         mat.uniforms.uTex!.value?.repeat.set(
             Math.sign(this.transform!.scale.x), 
