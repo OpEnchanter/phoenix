@@ -496,8 +496,8 @@ export class Renderer extends Component {
         const geo = new THREE.PlaneGeometry(Math.abs(this.transform!.scale.x), Math.abs(this.transform!.scale.y))
 
         this.initialScale = new Vector2(
-            texture!.width,
-            texture!.height
+            this.transform!.scale.x,
+            this.transform!.scale.y
         );  
 
         this.mesh = new THREE.Mesh(
