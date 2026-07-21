@@ -1355,6 +1355,7 @@ export class App {
             uniforms: {
                 uTex: { value: this.renderTarget.texture },
                 uDepth: { value: this.renderTarget.depthTexture },
+                time: { value: this.time },
                 ...this.args.shaderOverride?.uniforms
             },
             vertexShader: this.args.shaderOverride ? this.args.shaderOverride.vertexShader : defaultShader.vertexShader,
@@ -1497,6 +1498,8 @@ export class App {
 
             this.deltaTime = (Date.now() - this.oldTimestamp) * this.args.timescale!;
             this.oldTimestamp = Date.now();
+
+            this.screenSpaceShader.uniforms.time!.value = this.time;
             
             this.time++;
         })
