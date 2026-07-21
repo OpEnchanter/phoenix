@@ -1291,6 +1291,10 @@ export class App {
 
     time: number = 0;
 
+    public preSceneLoadCallback: () => void = () => {};
+    public postSceneLoadCallback: () => void = () => {};
+    public sceneLoadTimeout: number = 0;
+
     constructor (args: ApplicationArguments) {
 
         const defaultArgs: ApplicationArguments = {
@@ -1567,6 +1571,8 @@ export class App {
     }
 
     private initiateSceneLoad(name: string) {
+
+        this.preSceneLoadCallback();
         if (!Object.keys(this.scenes).includes(name)) {
             Logger.error(`Scene, ${name} not found`)
             return
@@ -1587,7 +1593,10 @@ export class App {
 
         this.scenes[name]!.onLoad(this);
 
-        this.start();
+        setTimeout(() => {
+            this.start();
+            this.postSceneLoadCallback();
+        }, this.sceneLoadTimeout);
     }
 
     public loadScene(name: string) {
