@@ -541,8 +541,8 @@ export class Renderer extends Component {
         }
 
         this.mesh?.scale.set(
-            (this.transform.scale.x / this.initialScale!.x), 
-            (this.transform.scale.y / this.initialScale!.y), 
+            Math.abs(this.transform.scale.x / this.initialScale!.x), 
+            Math.abs(this.transform.scale.y / this.initialScale!.y), 
             1
         )
 
