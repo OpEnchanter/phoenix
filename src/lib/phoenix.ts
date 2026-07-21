@@ -1293,7 +1293,6 @@ export class App {
 
     public preSceneLoadCallback: () => void = () => {};
     public postSceneLoadCallback: () => void = () => {};
-    public sceneLoadTimeout: number = 0;
 
     constructor (args: ApplicationArguments) {
 
@@ -1593,10 +1592,8 @@ export class App {
 
         this.scenes[name]!.onLoad(this);
 
-        setTimeout(() => {
-            this.start();
-            this.postSceneLoadCallback();
-        }, this.sceneLoadTimeout);
+        this.start();
+        this.postSceneLoadCallback();
     }
 
     public loadScene(name: string) {
