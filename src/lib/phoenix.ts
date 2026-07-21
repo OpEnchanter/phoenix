@@ -1293,6 +1293,7 @@ export class App {
 
     public preSceneLoadCallback: () => void = () => {};
     public postSceneLoadCallback: () => void = () => {};
+    public sceneLoadTimeout: number = 0;
 
     constructor (args: ApplicationArguments) {
 
@@ -1570,30 +1571,32 @@ export class App {
     }
 
     private initiateSceneLoad(name: string) {
-
         this.preSceneLoadCallback();
-        if (!Object.keys(this.scenes).includes(name)) {
-            Logger.error(`Scene, ${name} not found`)
-            return
-        }
 
-        if (this.isTicking) {
-            this.stop();
-        }
+        setTimeout(() => {
+            if (!Object.keys(this.scenes).includes(name)) {
+                Logger.error(`Scene, ${name} not found`)
+                return
+            }
 
-        Logger.info(`Loading scene ${name}`)
+            if (this.isTicking) {
+                this.stop();
+            }
 
-        this.curScene = name;
+            Logger.info(`Loading scene ${name}`)
 
-        for (const o of this.sceneGraphRoot.children) {
-            o.onDestroyed();
-        }
-        this.sceneGraphRoot.children.length = 0;
+            this.curScene = name;
 
-        this.scenes[name]!.onLoad(this);
+            for (const o of this.sceneGraphRoot.children) {
+                o.onDestroyed();
+            }
+            this.sceneGraphRoot.children.length = 0;
 
-        this.start();
-        this.postSceneLoadCallback();
+            this.scenes[name]!.onLoad(this);
+
+            this.start();
+            this.postSceneLoadCallback();
+        }, this.sceneLoadTimeout);
     }
 
     public loadScene(name: string) {
