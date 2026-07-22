@@ -1448,7 +1448,7 @@ export class App {
         Logger.success("Loading success")
     }
 
-    private resize() {
+    public resize() {
 
         // Resize scene renderer
         const w = window.innerWidth * this.args.renderScale!; 
