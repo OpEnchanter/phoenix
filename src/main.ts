@@ -96,7 +96,7 @@ const app: Phoenix.App = new Phoenix.App({
     timescale: 1,
     shaderOverride: {
         vertexShader: Phoenix.DefaultVertexShader,
-        fragmentShader: LitShader,
+        fragmentShader: Phoenix.ScreenspaceDefaultFragmentShader,
         uniforms: {
             uNumLights: { value: 1 },
             uLightPositions: { value: lightPositions },

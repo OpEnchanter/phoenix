@@ -889,7 +889,7 @@ export class UIRenderer extends Component {
         super();
         this.depth = depth;
         this.shader = {
-            fragmentShader: ScreenspaceDefaultFragmentShader,
+            fragmentShader: DefaultFragmentShader,
             vertexShader: DefaultVertexShader,
             uniforms: defaultShader.uniforms,
             ...shaderOverride
@@ -1269,7 +1269,12 @@ export class App {
     screenSpaceShader: THREE.ShaderMaterial;
     screenSpacePlane: THREE.Mesh;
 
+    postProcessingScene: THREE.Scene;
+    postProcessingCamera: THREE.OrthographicCamera;
+    postProcessingPlane: THREE.Mesh
+
     renderTarget: THREE.WebGLRenderTarget;
+    screenSpaceRenderTarget: THREE.WebGLRenderTarget;
 
     public deltaTime: number = 0;
 
@@ -1354,7 +1359,7 @@ export class App {
 
         this.screenSpaceScene = new THREE.Scene();
 
-        this.screenSpaceShader = new THREE.ShaderMaterial({ 
+        const UIShader = new THREE.ShaderMaterial({ 
             glslVersion: THREE.GLSL3,
             uniforms: {
                 uTex: { value: this.renderTarget.texture },
@@ -1362,18 +1367,53 @@ export class App {
                 time: { value: this.time },
                 ...this.args.shaderOverride?.uniforms
             },
+            vertexShader: defaultShader.vertexShader,
+            fragmentShader: defaultShader.fragmentShader
+        })
+
+
+        this.screenSpacePlane = new THREE.Mesh(
+            new THREE.PlaneGeometry(HI_W, HI_H),
+            UIShader
+        )
+
+        this.screenSpaceScene.add(this.screenSpacePlane)
+
+        // Post processing
+        this.screenSpaceRenderTarget = new THREE.WebGLRenderTarget(HI_W, HI_H, {
+            magFilter: THREE.NearestFilter,
+            minFilter: THREE.NearestFilter,
+            colorSpace: THREE.LinearSRGBColorSpace
+        })
+        this.screenSpaceRenderTarget.depthTexture = new THREE.DepthTexture(HI_W, HI_H);
+        this.screenSpaceRenderTarget.depthTexture.type = THREE.UnsignedShortType;
+
+        this.postProcessingScene = new THREE.Scene();
+        this.postProcessingCamera = new THREE.OrthographicCamera(
+            -HI_W / 2, HI_W / 2, 
+            HI_H / 2, -HI_H / 2, 
+            0.1, 100);
+
+        this.postProcessingCamera.position.set(0, 0, 10);
+
+        this.screenSpaceShader = new THREE.ShaderMaterial({ 
+            glslVersion: THREE.GLSL3,
+            uniforms: {
+                uTex: { value: this.screenSpaceRenderTarget.texture },
+                uDepth: { value: this.screenSpaceRenderTarget.depthTexture },
+                time: { value: this.time },
+                ...this.args.shaderOverride?.uniforms
+            },
             vertexShader: this.args.shaderOverride ? this.args.shaderOverride.vertexShader : defaultShader.vertexShader,
             fragmentShader: this.args.shaderOverride ? this.args.shaderOverride.fragmentShader : defaultShader.fragmentShader
         })
 
-        this.screenSpacePlane = new THREE.Mesh(
+        this.postProcessingPlane = new THREE.Mesh(
             new THREE.PlaneGeometry(HI_W, HI_H),
-
-            // Screen-space shader injection
             this.screenSpaceShader
         )
 
-        this.screenSpaceScene.add(this.screenSpacePlane)
+        this.postProcessingScene.add(this.postProcessingPlane);
 
         // Window resize handler
         this.resize();
@@ -1432,9 +1472,12 @@ export class App {
         this.oldLowWidth = w;
         this.oldLowHeight = h;
 
-        // Resize render target
+        // Resize render targets
         this.renderTarget.setSize(w, h)
         this.renderTarget.depthTexture
+
+        this.screenSpaceRenderTarget.setSize(w, h)
+        this.screenSpaceRenderTarget.depthTexture
 
         // Resize screen renderer
         this.renderer.setSize(HI_W, HI_H);
@@ -1497,8 +1540,11 @@ export class App {
             this.renderer.setRenderTarget(this.renderTarget);
             this.renderer.render(this.renderScene, this.camera);
             
-            this.renderer.setRenderTarget(null);
+            this.renderer.setRenderTarget(this.screenSpaceRenderTarget);
             this.renderer.render(this.screenSpaceScene, this.screenSpaceCamera);
+
+            this.renderer.setRenderTarget(null);
+            this.renderer.render(this.postProcessingScene, this.postProcessingCamera);
 
             this.deltaTime = (Date.now() - this.oldTimestamp) * this.args.timescale!;
             this.oldTimestamp = Date.now();
