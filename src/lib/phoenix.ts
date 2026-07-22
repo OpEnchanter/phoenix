@@ -1476,7 +1476,7 @@ export class App {
         this.renderTarget.setSize(w, h)
         this.renderTarget.depthTexture
 
-        this.screenSpaceRenderTarget.setSize(w, h)
+        this.screenSpaceRenderTarget.setSize(HI_W, HI_H)
         this.screenSpaceRenderTarget.depthTexture
 
         // Resize screen renderer
