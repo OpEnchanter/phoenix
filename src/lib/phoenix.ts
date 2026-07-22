@@ -1101,7 +1101,7 @@ export class GameObject {
         child.parent = this;
         this.children.push(child);
 
-        if (this.parent?.app.isTicking) {
+        if (this.app.isTicking) {
             child.onInitialized();
         }
     }
