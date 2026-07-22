@@ -1100,6 +1100,10 @@ export class GameObject {
     public addChild(child: GameObject) {
         child.parent = this;
         this.children.push(child);
+
+        if (this.parent?.app.isTicking) {
+            child.onInitialized();
+        }
     }
 
     public removeChild(child: GameObject) {
