@@ -1579,7 +1579,6 @@ export class App {
 
         for (const o of this.objectAdditionBuffer) {
             this.sceneGraphRoot.addChild(o);
-            o.onInitialized();
         }
 
         for (const o of this.objectRemovalBuffer) {
