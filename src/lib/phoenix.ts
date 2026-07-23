@@ -1287,6 +1287,7 @@ export class App {
     private keys: Record<string, boolean> = {};
     private mousePos = new Vector2(0, 0);
     private mouseDown = false;
+    private scrollDelta = new Vector2(0, 0);
 
     frameIntervalCallbacks: Array<() => void> = [];
 
@@ -1447,6 +1448,12 @@ export class App {
         document.addEventListener("mouseup", (e) => {
             this.mouseDown = false;
         })
+
+        document.addEventListener("wheel", (e) => {
+            this.scrollDelta.x = e.deltaX;
+            this.scrollDelta.y = e.deltaY;
+        })
+
         Logger.info("Input event listeners loaded")
 
         Logger.success("Loading success")
@@ -1506,6 +1513,10 @@ export class App {
         return this.mouseDown;
     }
 
+    public getScrollDelta() {
+        return this.scrollDelta;
+    }
+
     public start() {
         if (this.renderer == null) {
             Logger.error("Failed to start, rendering context null");
@@ -1533,6 +1544,9 @@ export class App {
             }
 
             document.body.style.cursor = "default";
+
+            this.scrollDelta.x = 0;
+            this.scrollDelta.y = 0;
 
             this.plWorld.step(this.deltaTime / 1000, 10, 6);
             this.update();
