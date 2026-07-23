@@ -1545,9 +1545,6 @@ export class App {
 
             document.body.style.cursor = "default";
 
-            this.scrollDelta.x = 0;
-            this.scrollDelta.y = 0;
-
             this.plWorld.step(this.deltaTime / 1000, 10, 6);
             this.update();
 
@@ -1570,6 +1567,9 @@ export class App {
             this.screenSpaceShader.uniforms.time!.value = this.time;
             
             this.time++;
+
+            this.scrollDelta.x = 0;
+            this.scrollDelta.y = 0;
         })
     }
 
