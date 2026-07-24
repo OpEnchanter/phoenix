@@ -1526,10 +1526,10 @@ export class App {
         // Begin measuring deltaTime
         this.oldTimestamp = Date.now();
 
+        this.sceneGraphRoot.onInitialized();
+
         // Save running status
         this.isTicking = true;
-
-        this.sceneGraphRoot.onInitialized();
 
         // Begin frame loop
         this.renderer.setAnimationLoop(() => {
