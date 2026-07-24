@@ -1092,9 +1092,6 @@ export class GameObject {
         component.parent = this;
         this.components.push(component);
 
-        if (this.parent?.app.isTicking) {
-            component.onInitialized();
-        }
     }
 
     public addChild(child: GameObject) {
