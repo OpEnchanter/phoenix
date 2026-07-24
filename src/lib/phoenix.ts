@@ -1585,6 +1585,7 @@ export class App {
 
         this.isTicking = false;
         this.renderer.setAnimationLoop(null);
+        this.renderScene.clear();
     }
 
     private update() {
