@@ -1104,6 +1104,7 @@ export class GameObject {
     }
 
     public removeChild(child: GameObject) {
+        child.onDestroyed();
         this.children.splice(this.children.indexOf(child), 1)
     }
 
@@ -1116,18 +1117,13 @@ export class GameObject {
             c.onDestroyed();
         }
 
-        // Call for all children to destroy recursively until end of scene graph
+        // Destroy all children and add this object to get removed by it's parent.
         for (const c of this.children) {
-            c.onDestroyed();
-        }
-
-        // Once all children have destroyed, then remove this object from it's parent
-        //this.parent?.children.splice(this.parent.children.indexOf(this), 1);
-        for (const c of this.childrenRemovalBuffer) {
             this.removeChild(c);
         }
         this.childrenRemovalBuffer.length = 0;
-        this.parent?.childrenRemovalBuffer.push(this)
+
+        this.parent?.childrenRemovalBuffer.push(this);
     }
 
     public onUpdate() {
@@ -1177,6 +1173,11 @@ export class GameObject {
                 c.onTriggerExit();
             }
         }
+
+        for (const c of this.childrenRemovalBuffer) {
+            this.removeChild(c);
+        }
+        this.childrenRemovalBuffer.length = 0;
 
         this.isCollidingOld = this.isColliding;
         this.isTriggeredOld = this.isTriggered;
