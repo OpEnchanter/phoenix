@@ -732,11 +732,6 @@ export class Rigidbody extends Component {
             this.transform.globalRotation = this.body.getAngle() / (Math.PI / 180);
         }
     }
-
-    public override onDestroyed(): void {
-        if (!this.parent || !this.body) return
-        this.parent.app.plWorld.destroyBody(this.body);
-    }
 }
 
 export class Camera extends Component {
@@ -1109,21 +1104,21 @@ export class GameObject {
     }
 
     public onDestroyed() {
-        // Remove the physics bodyd
-        (this.plBody && this.app.plWorld.destroyBody(this.plBody))
+        // Remove the physics body
+        if (this.plBody) this.app.plWorld.destroyBody(this.plBody);
+
+        // Destroy all children and add this object to get removed by it's parent.
+        for (const c of this.children) {
+            this.removeChild(c);
+        }
+        this.children.length = 0;
 
         // Call for all components to destroy
         for (const c of this.components) {
             c.onDestroyed();
         }
 
-        // Destroy all children and add this object to get removed by it's parent.
-        for (const c of this.children) {
-            this.removeChild(c);
-        }
-        this.childrenRemovalBuffer.length = 0;
-
-        this.parent?.childrenRemovalBuffer.push(this);
+        this.parent?.children.splice(this.parent.children.indexOf(this.parent), 1);
     }
 
     public onUpdate() {
@@ -1173,11 +1168,6 @@ export class GameObject {
                 c.onTriggerExit();
             }
         }
-
-        for (const c of this.childrenRemovalBuffer) {
-            this.removeChild(c);
-        }
-        this.childrenRemovalBuffer.length = 0;
 
         this.isCollidingOld = this.isColliding;
         this.isTriggeredOld = this.isTriggered;
@@ -1583,6 +1573,12 @@ export class App {
 
         this.isTicking = false;
         this.renderer.setAnimationLoop(null);
+        let b = this.plWorld.getBodyList();
+        while (b) {
+            let b2 = b;
+            b = b.getNext();
+            this.plWorld.destroyBody(b2);
+        }
         this.renderScene.clear();
     }
 
