@@ -1110,6 +1110,7 @@ export class GameObject {
         for (const c of this.components) {
             c.onDestroyed();
         }
+        this.components.length = 0;
 
         // Destroy all children and add this object to get removed by it's parent.
         let childrenRemovalBuffer = [];
