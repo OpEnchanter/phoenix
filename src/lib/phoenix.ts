@@ -1108,7 +1108,11 @@ export class GameObject {
         if (this.plBody) this.app.plWorld.destroyBody(this.plBody);
 
         // Destroy all children and add this object to get removed by it's parent.
+        let childrenRemovalBuffer = [];
         for (const c of this.children) {
+            childrenRemovalBuffer.push(c);
+        }
+        for (const c of childrenRemovalBuffer) {
             this.removeChild(c);
         }
         this.children.length = 0;
