@@ -1121,7 +1121,6 @@ export class GameObject {
         for (const c of childrenRemovalBuffer) {
             this.removeChild(c);
         }
-        this.children.length = 0;
 
 
         for (const c of this.childrenRemovalBuffer) {
