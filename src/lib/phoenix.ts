@@ -1100,12 +1100,16 @@ export class GameObject {
 
     public removeChild(child: GameObject) {
         child.onDestroyed();
-        this.children.splice(this.children.indexOf(child), 1)
     }
 
     public onDestroyed() {
         // Remove the physics body
         if (this.plBody) this.app.plWorld.destroyBody(this.plBody);
+
+        // Call for all components to destroy
+        for (const c of this.components) {
+            c.onDestroyed();
+        }
 
         // Destroy all children and add this object to get removed by it's parent.
         let childrenRemovalBuffer = [];
@@ -1117,12 +1121,11 @@ export class GameObject {
         }
         this.children.length = 0;
 
-        // Call for all components to destroy
-        for (const c of this.components) {
-            c.onDestroyed();
+        if (!this.parent!.app.isTicking) {
+            this.parent?.children.splice(this.parent.children.indexOf(this), 1);
+        } else {
+            this.parent?.childrenRemovalBuffer.push(this);
         }
-
-        this.parent?.children.splice(this.parent.children.indexOf(this.parent), 1);
     }
 
     public onUpdate() {
@@ -1172,6 +1175,12 @@ export class GameObject {
                 c.onTriggerExit();
             }
         }
+
+        for (const c of this.childrenRemovalBuffer) {
+            this.parent?.children.splice(this.parent.children.indexOf(this.parent), 1);
+        }
+        this.childrenRemovalBuffer.length = 0;
+
 
         this.isCollidingOld = this.isColliding;
         this.isTriggeredOld = this.isTriggered;
