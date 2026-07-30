@@ -1124,7 +1124,7 @@ export class GameObject {
 
 
         for (const c of this.childrenRemovalBuffer) {
-            this.parent?.children.splice(this.parent.children.indexOf(c), 1);
+            this.parent?.children.filter(c => c !== this);
         }
 
         this.parent?.childrenRemovalBuffer.push(this);
@@ -1179,7 +1179,7 @@ export class GameObject {
         }
 
         for (const c of this.childrenRemovalBuffer) {
-            this.parent?.children.splice(this.parent.children.indexOf(c), 1);
+            this.children.filter(child => child !== c);
         }
         this.childrenRemovalBuffer.length = 0;
 
