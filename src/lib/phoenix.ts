@@ -96,6 +96,21 @@ export const DefaultFragmentShader = `
     }
 `
 
+export const CanvasDefaultFragmentShader = `
+    in vec2 fragTexCoord;
+
+    uniform sampler2D uTex;
+    uniform float t;
+
+    out vec4 fragColor;
+
+    void main() {
+        vec4 p1 = texture(uTex, fragTexCoord);
+        p1.rgb = pow(p1.rgb, vec3(2.2));
+        fragColor = p1;
+    }
+`
+
 export const ScreenspaceDefaultFragmentShader = `
     in vec2 fragTexCoord;
 
@@ -349,6 +364,19 @@ export class CanvasSprite extends Sprite {
         super("CANVAS");
 
         this.canvas = canvas;
+
+        // Convert canvas to linear
+        const ctx = this.canvas.getContext("2d");
+        const imageData = ctx!.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+
+        for (let i = 0; i < data.length; i += 4) {
+            data[i]     = Math.pow(data[i]! / 255, 2.2) * 255;
+            data[i+1]   = Math.pow(data[i+1]! / 255, 2.2) * 255;
+            data[i+2]   = Math.pow(data[i+2]! / 255, 2.2) * 255;
+        }
+
+        ctx!.putImageData(imageData, 0, 0);
 
         this.texture = new THREE.CanvasTexture(this.canvas);
 
@@ -1396,7 +1424,7 @@ export class App {
         this.screenSpaceRenderTarget = new THREE.WebGLRenderTarget(HI_W, HI_H, {
             magFilter: THREE.NearestFilter,
             minFilter: THREE.NearestFilter,
-            colorSpace: THREE.SRGBColorSpace
+            colorSpace: THREE.LinearSRGBColorSpace
         })
         this.screenSpaceRenderTarget.depthTexture = new THREE.DepthTexture(HI_W, HI_H);
         this.screenSpaceRenderTarget.depthTexture.type = THREE.UnsignedShortType;
