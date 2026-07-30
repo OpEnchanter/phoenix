@@ -1124,7 +1124,9 @@ export class GameObject {
 
 
         for (const c of this.childrenRemovalBuffer) {
-            this.parent!.children = this.parent!.children.filter(child => child !== c);
+            const filtererd = this.parent!.children.filter(child => child !== c);
+            this.parent!.children.length = 0;
+            this.parent?.children.push(...filtererd);
         }
 
         this.parent?.childrenRemovalBuffer.push(this);
@@ -1179,7 +1181,9 @@ export class GameObject {
         }
 
         for (const c of this.childrenRemovalBuffer) {
-            this.children = this.children.filter(child => child !== c);
+            const filtererd = this.children.filter(child => child !== c);
+            this.children.length = 0;
+            this.children.push(...filtererd);
         }
         this.childrenRemovalBuffer.length = 0;
 
