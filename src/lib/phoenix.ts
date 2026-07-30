@@ -1116,17 +1116,19 @@ export class GameObject {
         let childrenRemovalBuffer = [];
         for (const c of this.children) {
             childrenRemovalBuffer.push(c);
+            this.parent?.childrenRemovalBuffer.push(this)
         }
         for (const c of childrenRemovalBuffer) {
             this.removeChild(c);
         }
         this.children.length = 0;
 
-        if (!this.parent!.app.isTicking) {
-            this.parent?.children.splice(this.parent.children.indexOf(this), 1);
-        } else {
-            this.parent?.childrenRemovalBuffer.push(this);
+
+        for (const c of this.childrenRemovalBuffer) {
+            this.parent?.children.splice(this.parent.children.indexOf(c), 1);
         }
+
+        this.parent?.childrenRemovalBuffer.push(this);
     }
 
     public onUpdate() {
@@ -1178,7 +1180,7 @@ export class GameObject {
         }
 
         for (const c of this.childrenRemovalBuffer) {
-            this.parent?.children.splice(this.parent.children.indexOf(this.parent), 1);
+            this.parent?.children.splice(this.parent.children.indexOf(c), 1);
         }
         this.childrenRemovalBuffer.length = 0;
 
