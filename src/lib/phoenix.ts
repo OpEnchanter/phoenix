@@ -365,19 +365,6 @@ export class CanvasSprite extends Sprite {
 
         this.canvas = canvas;
 
-        // Convert canvas to linear
-        const ctx = this.canvas.getContext("2d");
-        const imageData = ctx!.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imageData.data;
-
-        for (let i = 0; i < data.length; i += 4) {
-            data[i]     = Math.pow(data[i]! / 255, 2.2) * 255;
-            data[i+1]   = Math.pow(data[i+1]! / 255, 2.2) * 255;
-            data[i+2]   = Math.pow(data[i+2]! / 255, 2.2) * 255;
-        }
-
-        ctx!.putImageData(imageData, 0, 0);
-
         this.texture = new THREE.CanvasTexture(this.canvas);
 
         this.texture.minFilter = THREE.NearestFilter;
