@@ -885,7 +885,7 @@ export class UIRenderer extends Component {
         super();
         this.depth = depth;
         this.shader = {
-            fragmentShader: ScreenspaceDefaultFragmentShader,
+            fragmentShader: DefaultFragmentShader,
             vertexShader: DefaultVertexShader,
             uniforms: defaultShader.uniforms,
             ...shaderOverride
