@@ -354,7 +354,7 @@ export class CanvasSprite extends Sprite {
 
         this.texture.minFilter = THREE.NearestFilter;
         this.texture.magFilter = THREE.NearestFilter;
-        this.texture.colorSpace = THREE.SRGBColorSpace;
+        this.texture.colorSpace = THREE.LinearSRGBColorSpace;
     }
 
     public update() {
