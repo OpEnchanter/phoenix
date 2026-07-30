@@ -1396,7 +1396,7 @@ export class App {
         this.screenSpaceRenderTarget = new THREE.WebGLRenderTarget(HI_W, HI_H, {
             magFilter: THREE.NearestFilter,
             minFilter: THREE.NearestFilter,
-            colorSpace: THREE.LinearSRGBColorSpace
+            colorSpace: THREE.SRGBColorSpace
         })
         this.screenSpaceRenderTarget.depthTexture = new THREE.DepthTexture(HI_W, HI_H);
         this.screenSpaceRenderTarget.depthTexture.type = THREE.UnsignedShortType;
